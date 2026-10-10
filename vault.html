@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Papermill vault</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tinos:wght@400;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js"></script>
+<style>
+:root{--page:#ede5d0;--panel:#f4ecd8;--raised:#faf6ed;--sunken:#e8dec8;--ink:#15110e;--ink-2:#5f564b;--ink-3:#7a7060;--rule:#d4cbba;--rule-strong:#b8ad92;--accent:#a55230;--accent-ink:#fff6e6;--pos:#2d5f3a;--neg:#8b2020;--warn:#9c6a00;
+  --font-display:'Tinos','Times New Roman',serif;--font-ui:Inter,system-ui,sans-serif;--font-mono:'IBM Plex Mono',ui-monospace,Consolas,monospace;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#0d1229;--panel:#171d3d;--raised:#272f5a;--sunken:#0a0f24;--ink:#f4eaf2;--ink-2:#c7c4d8;--ink-3:#aeb8dd;--rule:#465382;--rule-strong:#6b7bb0;--accent:#f0a0b2;--accent-ink:#0d1229;--pos:#91d8bd;--neg:#f0a0b2;--warn:#ead9a0;color-scheme:dark}}
+*{box-sizing:border-box}html,body{overflow-x:hidden}
+body{margin:0;background:var(--page);color:var(--ink);font:16px/1.55 var(--font-ui)}
+.wrap{max-width:1100px;margin:0 auto;padding-inline:16px}
+@media(min-width:760px){.wrap{padding-inline:24px}}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.topbar{position:sticky;top:0;z-index:5;border-bottom:1px solid var(--rule);background:color-mix(in srgb,var(--page) 90%,transparent);backdrop-filter:blur(8px)}
+.topbar .wrap{display:flex;align-items:center;gap:16px;height:52px}
+.wordmark{font-family:var(--font-display);font-size:22px;color:var(--ink);text-decoration:none;letter-spacing:-.01em}
+.sp{flex:1}
+.net{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase}
+.btn{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;border:1.5px solid var(--ink);background:transparent;color:var(--ink);padding:8px 14px;border-radius:999px;cursor:pointer}
+.btn.primary{background:var(--ink);color:var(--page)}
+.btn.accent{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+h1{font-family:var(--font-display);font-weight:400;font-size:clamp(40px,7vw,72px);line-height:.95;letter-spacing:-.025em;margin:36px 0 6px}
+.lede{color:var(--ink-2);max-width:60ch;margin:0 0 24px}
+.grid{display:grid;gap:18px}
+@media(min-width:900px){.grid{grid-template-columns:1.2fr 1fr}}
+.card{border:1px solid var(--rule);background:var(--raised);border-radius:8px;padding:18px 20px}
+.card h2{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:0 0 12px;font-weight:500}
+.card h2::before{content:'';display:inline-block;width:22px;height:2px;background:var(--accent);vertical-align:middle;margin-right:8px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 18px}
+@media(min-width:600px){.stats{grid-template-columns:repeat(3,1fr)}}
+.stat .k{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.stat .v{font-family:var(--font-mono);font-size:20px;font-weight:500;color:var(--ink);margin-top:2px}
+.stat .s{font-size:12px;color:var(--ink-2)}
+.row{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap;margin-top:10px}
+input[type=text]{flex:1;min-width:140px;font:14px var(--font-mono);padding:10px 12px;border:1.5px solid var(--rule-strong);border-radius:6px;background:var(--panel);color:var(--ink)}
+input:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent)}
+.hint{font-size:12.5px;color:var(--ink-2);margin-top:8px}
+.hint b{color:var(--ink);font-weight:500}
+.log{font-family:var(--font-mono);font-size:12px;color:var(--ink-2);margin-top:16px;border-top:1px solid var(--rule);padding-top:10px;white-space:pre-wrap;word-break:break-all;min-height:20px}
+.log .ok{color:var(--pos)}.log .err{color:var(--neg)}
+.seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:999px;overflow:hidden}
+.seg button{background:none;border:0;padding:7px 11px;font:12px var(--font-mono);color:var(--ink-2);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--page)}
+.pill{display:inline-block;font-family:var(--font-mono);font-size:10.5px;border:1px solid var(--rule-strong);border-radius:999px;padding:2px 8px;color:var(--ink-2);margin-left:6px;vertical-align:middle}
+.foot{margin:40px 0 50px;font-family:var(--font-mono);font-size:11px;color:var(--ink-3)}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="wrap">
+  <a class="wordmark" href="./index.html">papermill</a>
+  <span class="net" id="net">loading config</span>
+  <span class="sp"></span>
+  <button class="btn primary" id="connect">Connect wallet</button>
+</div></header>
+
+<main class="wrap">
+  <h1>the vault</h1>
+  <p class="lede">Deposit USDC for PULP at net asset value. Redeem through the queue: request, settle at the next report, paid in order. Lock MILL for weight.</p>
+
+  <div class="grid">
+    <section class="card">
+      <h2>Mill floor</h2>
+      <div class="stats">
+        <div class="stat"><div class="k">NAV</div><div class="v" id="nav">—</div><div class="s">USDC, vesting-smoothed</div></div>
+        <div class="stat"><div class="k">NAV / PULP</div><div class="v" id="nps">—</div><div class="s">USDC per share</div></div>
+        <div class="stat"><div class="k">NAV / MILL</div><div class="v" id="npt">—</div><div class="s">controller share ÷ supply</div></div>
+        <div class="stat"><div class="k">Epoch</div><div class="v" id="epoch">—</div><div class="s" id="epochs">print run</div></div>
+        <div class="stat"><div class="k">Queue</div><div class="v" id="queue">—</div><div class="s">requests · unpaid payouts</div></div>
+        <div class="stat"><div class="k">PULP supply</div><div class="v" id="supply">—</div><div class="s">shares</div></div>
+      </div>
+      <div class="row"><button class="btn" id="run">Run the print run</button><button class="btn" id="pay">Pay the queue</button><span class="hint" id="runhint"></span></div>
+    </section>
+
+    <section class="card">
+      <h2>You</h2>
+      <div class="stats">
+        <div class="stat"><div class="k">Address</div><div class="v" id="me" style="font-size:13px">not connected</div></div>
+        <div class="stat"><div class="k">USDC</div><div class="v" id="myusdc">—</div></div>
+        <div class="stat"><div class="k">PULP</div><div class="v" id="mypulp">—</div><div class="s" id="myval"></div></div>
+        <div class="stat"><div class="k">MILL</div><div class="v" id="mymill">—</div></div>
+        <div class="stat"><div class="k">Hold until</div><div class="v" id="hold" style="font-size:14px">—</div></div>
+        <div class="stat"><div class="k">Claimable</div><div class="v" id="claim">—</div><div class="s">USDC pushed back to you</div></div>
+      </div>
+      <div class="row"><button class="btn" id="claimbtn">Claim payout</button></div>
+    </section>
+
+    <section class="card">
+      <h2>Deposit <span class="pill">min 10 USDC</span></h2>
+      <div class="row"><input type="text" id="dep" placeholder="USDC amount" inputmode="decimal"><button class="btn accent" id="depbtn">Deposit</button></div>
+      <div class="hint">Priced at today's NAV. Restarts your 24-hour holding clock. Deposits are to your own address only.</div>
+    </section>
+
+    <section class="card">
+      <h2>Redeem <span class="pill">queue</span></h2>
+      <div class="row"><input type="text" id="red" placeholder="PULP shares" inputmode="decimal"><button class="btn" id="redbtn">Request</button><button class="btn" id="redmax">Max</button></div>
+      <div class="hint">Escrowed now, priced at the next report's NAV, paid first in first out. Minimum 10 USDC of value, at most 8 open requests.</div>
+    </section>
+
+    <section class="card">
+      <h2>Lock MILL <span class="pill">1× to 4×</span></h2>
+      <div class="row"><input type="text" id="lockamt" placeholder="MILL amount" inputmode="decimal"><input type="text" id="lockw" placeholder="weeks 1–52" inputmode="numeric" style="max-width:120px"><button class="btn" id="lockbtn">Lock</button></div>
+      <div class="hint" id="lockinfo">No lock.</div>
+      <div class="row"><button class="btn" id="unlockbtn">Unlock</button><button class="btn" id="lclaim">Claim</button></div>
+    </section>
+  </div>
+
+  <div class="log" id="log"></div>
+  <div class="foot">Not deployed to mainnet until the addresses in config.json say so. Papermill is not affiliated with Papertrade.</div>
+</main>
+
+<script>
+(async function(){
+  const E = window.ethers;
+  const $ = id => document.getElementById(id);
+  const log = (m, cls) => { const d = document.createElement('div'); d.className = cls||''; d.textContent = m; $('log').prepend(d); };
+  const ABI = {
+    pulp: ['function deposit(uint256,address) returns (uint256)','function requestRedeem(uint256) returns (uint256)','function processPayouts(uint256) returns (uint256)','function claimPayout() returns (uint256)',
+           'function nav() view returns (uint256)','function navPerShare() view returns (uint256)','function totalSupply() view returns (uint256)','function balanceOf(address) view returns (uint256)',
+           'function pendingRequests() view returns (uint256)','function pendingPayouts() view returns (uint256)','function claimablePayout(address) view returns (uint256)','function lastDepositAt(address) view returns (uint64)',
+           'function MIN_HOLD() view returns (uint64)','function MIN_DEPOSIT() view returns (uint256)','function openRequests(address) view returns (uint256)',
+           'error HoldPeriod()','error BelowMinimum()','error TooManyRequests()','error ReceiverMustBeSender()','error Insolvent()','error ZeroNav()','error ReservedCash()','error NothingToClaim()','error ZeroAmount()','error DirectTransferToVault()'],
+    erc20: ['function approve(address,uint256) returns (bool)','function allowance(address,address) view returns (uint256)','function balanceOf(address) view returns (uint256)','function decimals() view returns (uint8)'],
+    ctrl: ['function navPerToken() view returns (uint256)','function currentEpoch() view returns (uint64)','function epochDue() view returns (bool)','function retryDue() view returns (bool)','function hasDeferred() view returns (bool)','function runEpoch()','error EpochNotDue()'],
+    locker: ['function lock(uint256,uint64)','function unlock()','function claim() returns (uint256)','function lockOf(address) view returns (tuple(uint128 amount,uint64 end,uint64 weeks_))','function weightOf(address) view returns (uint256)','function pendingOf(address) view returns (uint256)','error BadDuration()','error StillLocked()','error NoLock()'],
+  };
+  const WHY = {HoldPeriod:'holding period: 24 hours after your last deposit', BelowMinimum:'below the 10 USDC minimum', TooManyRequests:'you already have 8 open requests', ReceiverMustBeSender:'deposits are to your own address only', Insolvent:'vault owes more than it holds; deposits paused', ZeroNav:'NAV is zero right now', ReservedCash:'not enough unreserved cash yet; try later', NothingToClaim:'nothing to claim', ZeroAmount:'amount is zero', EpochNotDue:'the print run is not due yet', BadDuration:'lock must be 1 to 52 weeks and not shorter than your current lock', StillLocked:'your lock has not ended', NoLock:'you have no lock'};
+  let cfg, provider, signer, me, c = {};
+  try { cfg = await (await fetch('./config.json', {cache:'no-store'})).json(); } catch(e) { $('net').textContent = 'config.json missing'; return; }
+  $('net').textContent = cfg.network + ' · chain ' + cfg.chainId;
+  provider = new E.JsonRpcProvider(cfg.rpc);
+  const bind = (s) => { const p = s || provider; c.pulp = new E.Contract(cfg.pulp, ABI.pulp, p); c.usdc = new E.Contract(cfg.usdc, ABI.erc20, p); c.mill = new E.Contract(cfg.mill, ABI.erc20, p); c.ctrl = new E.Contract(cfg.controller, ABI.ctrl, p); c.locker = new E.Contract(cfg.locker, ABI.locker, p); };
+  bind();
+  const u6 = v => E.formatUnits(v, 6), u18 = v => E.formatUnits(v, 18);
+  const fmt = (s, d=2) => { const n = Number(s); return isFinite(n) ? n.toLocaleString(undefined, {maximumFractionDigits:d}) : s; };
+
+  async function refresh(){
+    try{
+      const [nav, nps, sup, pr, pp, npt, ep, due, def] = await Promise.all([c.pulp.nav(), c.pulp.navPerShare(), c.pulp.totalSupply(), c.pulp.pendingRequests(), c.pulp.pendingPayouts(), c.ctrl.navPerToken(), c.ctrl.currentEpoch(), c.ctrl.epochDue(), c.ctrl.hasDeferred()]);
+      $('nav').textContent = fmt(u6(nav)); $('nps').textContent = fmt(E.formatUnits(nps, 6), 4); $('npt').textContent = fmt(E.formatUnits(npt, 6), 6);
+      $('supply').textContent = fmt(u18(sup), 0); $('queue').textContent = pr + ' · ' + pp; $('epoch').textContent = '#' + ep; $('epochs').textContent = due ? 'print run due · anyone may run it' : (def ? 'deferred · retry after an hour' : 'not due');
+      if (me) {
+        const [bu, bp, bm, cl, ld, mh, lk, w] = await Promise.all([c.usdc.balanceOf(me), c.pulp.balanceOf(me), c.mill.balanceOf(me), c.pulp.claimablePayout(me), c.pulp.lastDepositAt(me), c.pulp.MIN_HOLD(), c.locker.lockOf(me), c.locker.weightOf(me)]);
+        $('myusdc').textContent = fmt(u6(bu)); $('mypulp').textContent = fmt(u18(bp), 4); $('mymill').textContent = fmt(u18(bm), 2); $('claim').textContent = fmt(u6(cl));
+        const val = sup > 0n ? bp * nav / sup : 0n; $('myval').textContent = '≈ ' + fmt(u6(val)) + ' USDC at NAV';
+        const until = Number(ld) + Number(mh); $('hold').textContent = ld == 0n ? '—' : (until * 1000 < Date.now() ? 'free to redeem' : new Date(until*1000).toLocaleString());
+        $('lockinfo').textContent = lk.amount > 0n ? fmt(u18(lk.amount)) + ' MILL · ' + lk.weeks_ + ' w · weight ' + fmt(u18(w)) + ' · ends ' + new Date(Number(lk.end)*1000).toLocaleDateString() : 'No lock.';
+      }
+    } catch(e){ log('read failed: ' + (e.shortMessage || e.message), 'err'); }
+  }
+
+  async function connect(){
+    try{
+      if (cfg.devKey) { signer = new E.Wallet(cfg.devKey, provider); log('dev signer (local chain)', 'ok'); }
+      else if (window.ethereum) { const bp = new E.BrowserProvider(window.ethereum); await bp.send('eth_requestAccounts', []); signer = await bp.getSigner(); const net = await bp.getNetwork(); if (Number(net.chainId) !== cfg.chainId) log('wrong network: switch to chain ' + cfg.chainId, 'err'); }
+      else { log('no wallet found; read-only', 'err'); return; }
+      me = await signer.getAddress(); bind(signer); $('me').textContent = me.slice(0,6) + '…' + me.slice(-4); $('connect').textContent = 'Connected'; $('connect').disabled = true; refresh();
+    } catch(e){ log('connect failed: ' + (e.shortMessage || e.message), 'err'); }
+  }
+  // a send fails at estimateGas with raw revert bytes; match them against our interfaces
+  function decodeRevert(e){
+    const d = e.data || (e.info && e.info.error && e.info.error.data) || (e.error && e.error.data);
+    if (typeof d !== 'string' || d.length < 10) return null;
+    for (const k of ['pulp','ctrl','locker','usdc','mill']) { try { const p = c[k].interface.parseError(d); if (p) return p.name; } catch(_){} }
+    return null;
+  }
+  async function tx(label, fn){
+    if (!signer) { log('connect a wallet first', 'err'); return; }
+    try { log(label + ' …'); const r = await fn(); const rc = await r.wait(); log(label + ' ✓ ' + rc.hash, 'ok'); refresh(); }
+    catch(e){ const name = (e.revert && e.revert.name) || decodeRevert(e); const m = name ? (WHY[name] || name) : (e.shortMessage || e.reason || e.message || String(e)); log(label + ' ✗ ' + m, 'err'); }
+  }
+  $('connect').onclick = connect;
+  $('depbtn').onclick = async () => { const amt = E.parseUnits($('dep').value || '0', 6); if (amt <= 0n) return; const al = await c.usdc.allowance(me, cfg.pulp); if (al < amt) await tx('approve USDC', () => c.usdc.approve(cfg.pulp, amt)); await tx('deposit ' + $('dep').value + ' USDC', () => c.pulp.deposit(amt, me)); };
+  $('redmax').onclick = async () => { $('red').value = u18(await c.pulp.balanceOf(me)); };
+  $('redbtn').onclick = () => { const sh = E.parseUnits($('red').value || '0', 18); if (sh <= 0n) return; tx('request redeem', () => c.pulp.requestRedeem(sh)); };
+  $('pay').onclick = () => tx('processPayouts(50)', () => c.pulp.processPayouts(50));
+  $('claimbtn').onclick = () => tx('claimPayout', () => c.pulp.claimPayout());
+  $('run').onclick = () => tx('runEpoch', () => c.ctrl.runEpoch());
+  $('lockbtn').onclick = async () => { const amt = E.parseUnits($('lockamt').value || '0', 18); const w = parseInt($('lockw').value || '0', 10); if (amt <= 0n || !w) return; const al = await c.mill.allowance(me, cfg.locker); if (al < amt) await tx('approve MILL', () => c.mill.approve(cfg.locker, amt)); await tx('lock ' + w + ' weeks', () => c.locker.lock(amt, w)); };
+  $('unlockbtn').onclick = () => tx('unlock', () => c.locker.unlock());
+  $('lclaim').onclick = () => tx('claim lock rewards', () => c.locker.claim());
+  refresh(); setInterval(refresh, 15000);
+})();
+</script>
+</body>
+</html>

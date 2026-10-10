@@ -1,0 +1,1027 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Papermill</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a paper machine read left to right as the hero, terminal-dense station panels, cream uncoated-paper ground. */
+:root{
+  --page:#ede5d0; --panel:#f4ecd8; --raised:#faf6ed; --sunken:#e8dec8;
+  --ink:#2a2520; --ink-2:#5f564b; --ink-3:#7a7060; --rule:#d4cbba; --rule-strong:#b8ad92;
+  --accent:#7a6235; --accent-ink:#faf6ed; --pos:#2d5f3a; --neg:#8b2020; --attn:#a55230; --warn:#9c6a00;
+  --stock:#b9ad92; --stock-deep:#8f8468; --sheet:#fbf7ec; --sheet-edge:#9a8f7a; --cash:#2d5f3a; --ember:#c25b1f; --steel:#6e6557; --steel-hi:#a69c86; --roller:#e8dec8;
+  --font-display:'Tinos','Times New Roman',Times,serif; --font-ui:Inter,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; --font-mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,'Liberation Mono',monospace;
+  --radius:6px; --gutter:16px; --max:1440px;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --page:#0d1229; --panel:#171d3d; --raised:#272f5a; --sunken:#0a0f24;
+    --ink:#f4eaf2; --ink-2:#c7c4d8; --ink-3:#aeb8dd; --rule:#465382; --rule-strong:#6b7bb0;
+    --accent:#c5c9f2; --accent-ink:#0d1229; --pos:#91d8bd; --neg:#f0a0b2; --attn:#f3b6c4; --warn:#ead9a0;
+    --stock:#3a4575; --stock-deep:#2b3560; --sheet:#f4eaf2; --sheet-edge:#8a95c8; --cash:#91d8bd; --ember:#f08ca8; --steel:#8a95c8; --steel-hi:#b8c5ff; --roller:#1c2448;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --page:#0d1229; --panel:#171d3d; --raised:#272f5a; --sunken:#0a0f24;
+  --ink:#f4eaf2; --ink-2:#c7c4d8; --ink-3:#aeb8dd; --rule:#465382; --rule-strong:#6b7bb0;
+  --accent:#c5c9f2; --accent-ink:#0d1229; --pos:#91d8bd; --neg:#f0a0b2; --attn:#f3b6c4; --warn:#ead9a0;
+  --stock:#3a4575; --stock-deep:#2b3560; --sheet:#f4eaf2; --sheet-edge:#8a95c8; --cash:#91d8bd; --ember:#f08ca8; --steel:#8a95c8; --steel-hi:#b8c5ff; --roller:#1c2448;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{overflow-x:hidden}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--font-ui);font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased}
+a{color:var(--accent)}
+.wrap{max-width:var(--max);margin:0 auto;padding-inline:var(--gutter)}
+@media (min-width:760px){:root{--gutter:24px}}
+@media (min-width:1100px){:root{--gutter:32px}}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-feature-settings:'zero'}
+.eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+h1,h2,h3{text-wrap:balance;margin:0}
+h2{font-family:var(--font-display);font-weight:400;font-size:30px;line-height:1.15;letter-spacing:-.005em}
+h3{font-family:var(--font-ui);font-weight:600;font-size:15px}
+p{margin:0}
+.prose{max-width:68ch}
+.prose p+p{margin-top:12px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* top bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:40;background:color-mix(in srgb,var(--page) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--rule)}
+.topbar .wrap{display:flex;align-items:center;gap:20px;height:52px}
+.wordmark{font-family:var(--font-display);font-size:22px;letter-spacing:-.01em;color:var(--ink);text-decoration:none;display:flex;align-items:center;gap:8px}
+.wordmark svg{width:16px;height:16px}
+.nav{display:none;gap:18px;margin-left:8px}
+.nav a{font-family:var(--font-mono);font-size:12px;color:var(--ink-2);text-decoration:none;letter-spacing:.02em}
+.nav a:hover{color:var(--ink)}
+@media (min-width:900px){.nav{display:flex}}
+.spacer{flex:1}
+.theme{display:flex;border:1px solid var(--rule-strong);border-radius:999px;overflow:hidden;font-family:var(--font-mono);font-size:11px}
+.theme button{background:none;border:0;color:var(--ink-3);padding:5px 9px;cursor:pointer;letter-spacing:.06em;text-transform:uppercase}
+.theme button[aria-pressed="true"]{background:var(--ink);color:var(--page)}
+.btn{font-family:var(--font-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink);text-decoration:none;border:1px solid var(--rule-strong);padding:7px 12px;border-radius:999px;background:var(--raised);cursor:pointer}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--ink);color:var(--page);border-color:var(--ink)}
+.bracket{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);text-decoration:none;padding:6px 2px}
+.bracket::before{content:'( '}.bracket::after{content:' )'}
+.bracket:hover{color:var(--accent)}
+
+/* tape */
+.tape{border-bottom:1px solid var(--rule);background:var(--panel);overflow:hidden}
+.tape-row{display:flex;gap:0;white-space:nowrap;font-family:var(--font-mono);font-size:12px;color:var(--ink-2);height:36px;align-items:center;width:max-content}
+.tape-row span{padding:0 18px;border-right:1px solid var(--rule)}
+.tape-row b{color:var(--ink);font-weight:500}
+@media (prefers-reduced-motion:no-preference) and (min-width:760px){
+  .tape-row{animation:tape 70s linear infinite}
+  .tape:hover .tape-row{animation-play-state:paused}
+  @keyframes tape{to{transform:translateX(-50%)}}
+}
+@media (max-width:759px){.tape-row{white-space:normal;flex-wrap:wrap;height:auto;width:auto;padding:4px 0}.tape-row span{padding:4px 10px;border:0}}
+.tape-note{font-size:11px;color:var(--ink-3);padding-left:18px}
+
+/* hero */
+.hero{padding-block:48px 18px;position:relative}
+.hero h1{font-family:var(--font-display);font-weight:400;font-size:clamp(56px,11vw,124px);line-height:.95;letter-spacing:-.02em;color:var(--ink)}
+.hero .claims{margin:22px 0 0;padding:0;list-style:none;font-size:17px;line-height:1.55;max-width:42ch}
+.hero .claims li{color:var(--ink)}
+.hero .ctas{display:flex;gap:14px;flex-wrap:wrap;margin-top:22px}
+.hero .thesis{margin-top:30px;font-family:var(--font-display);font-size:24px;line-height:1.3;max-width:30ch;color:var(--ink)}
+.dither{position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.55;background-repeat:repeat;background-size:200px 200px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.9),rgba(0,0,0,.25) 70%,transparent)}
+@media (min-width:1100px){.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:end}}
+.hero-aside{margin-top:24px;border:1px solid var(--rule);background:var(--raised);border-radius:var(--radius);padding:16px 18px;font-size:14px;color:var(--ink-2)}
+.hero-aside .mono{color:var(--ink);font-size:12px}
+.hero-aside dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:10px 0 0}
+.hero-aside dt{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.hero-aside dd{margin:0;color:var(--ink)}
+
+/* the mill */
+.mill-section{padding-block:28px 10px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0 12px;font-family:var(--font-mono);font-size:12px;color:var(--ink-2)}
+.seg{display:inline-flex;border:1px solid var(--rule-strong);border-radius:999px;overflow:hidden}
+.seg button{background:none;border:0;padding:6px 11px;font:inherit;color:var(--ink-3);cursor:pointer;letter-spacing:.02em}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--page)}
+.toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;color:var(--ink-2)}
+.toggle input{accent-color:var(--accent)}
+.controls .note{color:var(--ink-3);font-size:11px}
+.mill-grid{display:grid;grid-template-columns:1fr;gap:18px}
+@media (min-width:1100px){.mill-grid{grid-template-columns:1fr 380px;align-items:start}}
+.plate{border:1px solid var(--rule);background:var(--panel);border-radius:var(--radius);position:relative;overflow:hidden}
+.plate .scroller{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.plate svg{display:block;width:100%;height:auto;min-width:980px}
+@media (min-width:1100px){.plate svg{min-width:0}}
+.caption{display:flex;gap:12px;align-items:center;min-height:36px;border-top:1px solid var(--rule);background:var(--sunken);padding:6px 12px;font-family:var(--font-mono);font-size:12px;color:var(--ink-2)}
+.caption b{color:var(--ink);font-weight:500}
+.caption .step{color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:10px;font-family:var(--font-mono);font-size:11px;color:var(--ink-2)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:6px;border:1px solid var(--rule-strong)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:10px 0 4px;scrollbar-width:thin}
+.chips button{flex:0 0 auto;font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;border:1px solid var(--rule-strong);background:var(--raised);color:var(--ink-2);padding:5px 10px;border-radius:999px;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--ink);color:var(--page);border-color:var(--ink)}
+
+/* svg styling */
+.mill text{font-family:var(--font-mono);fill:var(--ink-2);font-size:10.5px}
+.mill text.name{fill:var(--ink);font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:500}
+.mill text.lbl{fill:var(--ink-3);font-size:9.5px}
+.mill .frame{fill:none;stroke:var(--steel);stroke-width:1;vector-effect:non-scaling-stroke}
+.mill .fill{fill:var(--roller);stroke:var(--steel);stroke-width:1}
+.mill .pipe-stock{fill:none;stroke:var(--stock);stroke-width:8;stroke-linecap:round;stroke-linejoin:round}
+.mill .pipe-cash{fill:none;stroke:var(--cash);stroke-width:6;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+.mill .pipe-sheet{fill:none;stroke:var(--sheet);stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+.mill .sheet-edge{fill:none;stroke:var(--sheet-edge);stroke-width:1;stroke-linecap:round;stroke-linejoin:round}
+.mill .dotted{fill:none;stroke:var(--ink-3);stroke-width:1.2;stroke-dasharray:2 4}
+.mill .wall{fill:none;stroke:var(--ink-3);stroke-width:1;stroke-dasharray:4 4}
+.mill .chev{fill:none;stroke:var(--ink-3);stroke-width:1}
+.mill .stockfill{fill:var(--stock);opacity:.75}
+.mill .ember{stroke:var(--ember);fill:var(--ember)}
+.mill .flow{fill:none;stroke-width:2;stroke-linecap:round;opacity:.65}
+.mill .flow.stock{stroke:var(--stock-deep);stroke-dasharray:2 10}
+.mill .flow.cash{stroke:var(--cash);stroke-dasharray:2 10}
+.mill .st{cursor:pointer}
+.mill .hit{fill:transparent;pointer-events:all}
+.mill .st:hover .frame,.mill .st:hover .fill{stroke:var(--accent)}
+.mill .st:hover text.name,.mill .st.is-active text.name{fill:var(--accent)}
+.mill .st.is-active .frame,.mill .st.is-active .fill{stroke:var(--accent);stroke-width:1.6}
+.mill .st.is-dim{opacity:.4}
+.mill .st:focus-visible{outline:none}
+.mill .st:focus-visible .hit{stroke:var(--accent);stroke-width:2;stroke-dasharray:4 3}
+.mill .spin{transform-box:fill-box;transform-origin:center}
+.mill .pulse{fill:var(--cash)}
+.mill .tag{fill:var(--warn);font-size:9.5px;font-weight:500}
+.mill .tagbox{fill:var(--raised);stroke:var(--warn);stroke-width:1}
+@media (prefers-reduced-motion:no-preference){
+  .in-view .mill .spin{animation:spin var(--dur,24s) linear infinite}
+  .in-view .mill .spin.rev{animation-direction:reverse}
+  .in-view .mill .flow.stock{animation:drift 14s linear infinite}
+  .in-view .mill .flow.cash{animation:drift 20s linear infinite reverse}
+  .in-view .mill .blink{animation:blink 2.4s ease-in-out infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes drift{to{stroke-dashoffset:-120}}
+  @keyframes blink{50%{opacity:.5}}
+}
+
+/* panel */
+.dock{position:sticky;top:72px}
+.panel{border:1px solid var(--rule);background:var(--raised);border-radius:var(--radius);min-height:280px;max-height:calc(100vh - 100px);overflow:auto;font-size:13.5px;line-height:1.55}
+.panel .empty{padding:40px 22px;color:var(--ink-3);text-align:center;font-family:var(--font-mono);font-size:12px}
+.panel header{position:sticky;top:0;background:var(--raised);border-bottom:1px solid var(--rule);padding:12px 16px;display:flex;gap:10px;align-items:flex-start}
+.panel header .t{flex:1;min-width:0}
+.panel header h3{font-size:15px}
+.panel header .role{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-top:2px}
+.panel .close{background:none;border:1px solid var(--rule-strong);border-radius:999px;width:28px;height:28px;cursor:pointer;color:var(--ink-2);font-size:16px;line-height:1}
+.panel .body{padding:14px 16px 18px}
+.panel .summary{color:var(--ink-2);margin-bottom:12px}
+.chiprow{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.04em;border:1px solid var(--rule-strong);border-radius:999px;padding:2px 8px;color:var(--ink-2);background:var(--panel)}
+.chip.contract{color:var(--ink)}
+.fn{border-top:1px solid var(--rule);padding:12px 0}
+.fn:last-child{padding-bottom:0}
+.sig{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);word-break:break-word;padding-left:1.2em;text-indent:-1.2em}
+.sig .ty{color:var(--ink-3)}
+.badge{display:inline-block;font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--rule-strong);border-radius:999px;padding:1px 7px;color:var(--ink-2);margin:6px 6px 6px 0;vertical-align:middle}
+.badge::before{content:'';display:inline-block;width:6px;height:6px;border-radius:1px;margin-right:6px;background:var(--ink-3);vertical-align:1px}
+.badge.anyone::before{background:var(--ink-2)}.badge.keeper::before{background:var(--pos)}.badge.controller::before{background:var(--accent)}.badge.owner::before{background:var(--attn)}.badge.auto::before{background:var(--ink-3)}.badge.view::before{background:var(--rule-strong)}
+.effect{color:var(--ink);margin:4px 0 6px}
+.guards{margin:0;padding:0;list-style:none;font-family:var(--font-mono);font-size:11.5px;color:var(--ink-2)}
+.guards li{padding-left:14px;position:relative;line-height:1.5}
+.guards li::before{content:'·';position:absolute;left:3px;color:var(--ink-3)}
+.guards code{color:var(--ink-3);font-family:inherit}
+.panel details{border-top:1px solid var(--rule);margin-top:12px}
+.panel details summary{cursor:pointer;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);padding:10px 0}
+.panel .spec{font-size:12.5px;color:var(--ink-2);border-top:1px solid var(--rule);margin-top:12px;padding-top:10px}
+.panel .related{margin-top:10px}
+.panel .related button{font-family:var(--font-mono);font-size:10.5px;border:1px solid var(--rule-strong);background:var(--panel);color:var(--ink-2);border-radius:999px;padding:2px 8px;cursor:pointer;margin:0 4px 4px 0}
+@media (max-width:1099px){
+  .dock{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:50;transform:translateY(102%);transition:transform .25s ease}
+  .dock.open{transform:none}
+  .panel{border-radius:12px 12px 0 0;max-height:72vh;border-bottom:0;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .panel .empty{display:none}
+  .handle{width:36px;height:4px;border-radius:2px;background:var(--rule-strong);margin:8px auto 0}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.25);z-index:45;display:none}
+  .scrim.show{display:block}
+}
+@media (min-width:1100px){.handle,.scrim{display:none!important}}
+
+/* sections */
+section.band{padding-block:48px;border-top:1px solid var(--rule)}
+.two{display:grid;gap:28px}
+@media (min-width:900px){.two{grid-template-columns:5fr 7fr}}
+.steps{margin:0;padding:0;list-style:none;counter-reset:s}
+.steps li{display:grid;grid-template-columns:34px 1fr;gap:12px;padding:12px 0;border-top:1px solid var(--rule)}
+.steps li:first-child{border-top:0}
+.steps .n{font-family:var(--font-mono);font-size:12px;color:var(--ink-3);padding-top:3px}
+.steps .n::before{counter-increment:s;content:counter(s,decimal-leading-zero)}
+.steps h3{margin-bottom:2px}
+.steps .calls{font-family:var(--font-mono);font-size:11.5px;color:var(--accent);margin-top:4px}
+.steps .where{font-family:var(--font-mono);font-size:11px;color:var(--ink-3)}
+.gauge-wrap{margin-top:18px;border:1px solid var(--rule);background:var(--panel);border-radius:var(--radius);padding:12px}
+.gauge-wrap svg{display:block;width:100%;height:auto;max-width:100%}
+.gauge-wrap .cap{font-family:var(--font-mono);font-size:11px;color:var(--ink-3);margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:500;padding:10px 10px 8px;border-bottom:1px solid var(--rule-strong)}
+td{padding:9px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+td.m{font-family:var(--font-mono);font-size:12.5px;font-variant-numeric:tabular-nums}
+.dir{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3)}
+.table-wrap{overflow-x:auto}
+@media (max-width:600px){
+  .stack thead{display:none}
+  .stack tr{display:grid;grid-template-columns:1fr;border:1px solid var(--rule);border-radius:var(--radius);margin-bottom:10px;background:var(--panel)}
+  .stack td{border:0;padding:6px 12px}
+  .stack td::before{content:attr(data-k);display:block;font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+}
+.ledger{display:grid;gap:18px;margin-top:18px}
+@media (min-width:900px){.ledger{grid-template-columns:repeat(3,1fr)}}
+.ledger div{border-left:2px solid var(--rule-strong);padding-left:14px}
+.ledger div.stock{border-color:var(--stock-deep)}.ledger div.sheet{border-color:var(--sheet-edge)}.ledger div.steam{border-color:var(--cash)}
+.ledger h3{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+.ledger ol{margin:0;padding-left:18px;font-size:13.5px}
+.ledger li{margin:4px 0}
+.ledger code{font-family:var(--font-mono);font-size:12px;color:var(--accent)}
+.risk{border-top:1px solid var(--rule);padding:12px 0}
+.risk h3{margin-bottom:4px}
+.legal{margin-top:22px;padding:14px 16px;border:1px solid var(--rule-strong);border-radius:var(--radius);font-family:var(--font-mono);font-size:12px;color:var(--ink-2);background:var(--panel)}
+footer{border-top:1px solid var(--rule);padding-block:28px 40px;font-size:13px;color:var(--ink-2)}
+footer .cols{display:grid;gap:18px}
+@media (min-width:760px){footer .cols{grid-template-columns:1fr 1fr}}
+footer ul{list-style:none;margin:0;padding:0}
+footer li{font-family:var(--font-mono);font-size:12px;padding:3px 0}
+footer li span{color:var(--ink-3)}
+.status{margin-top:16px;font-family:var(--font-mono);font-size:11px;color:var(--ink-3)}
+.listview details{border-top:1px solid var(--rule)}
+.listview summary{cursor:pointer;padding:12px 0;font-weight:600}
+.listview .fn{padding:8px 0}
+
+/* ---- impact pass: heavier ink, bigger type, the mill on a dark plate ---- */
+:root{--ink:#15110e;--accent:#a55230;--accent-ink:#fff6e6;--stock:#c9a86a;--stock-deep:#9c7a3f;--sheet:#fffaf0;--sheet-edge:#15110e;--cash:#2d7a4f;--ember:#c9502a;
+  --plate:#f4ecd8;--plate-ink:#15110e;--plate-ink-2:#3d352c;--plate-ink-3:#6f6552;--plate-steel:#15110e;--plate-roller:#e8dec8;--plate-rule:#b8ad92;--plate-accent:#a55230}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--plate:#070a18;--plate-ink:#f4eaf2;--plate-ink-2:#cdd3e9;--plate-ink-3:#8f9bc4;--plate-steel:#e6ecff;--plate-roller:#161d3c;--plate-rule:#2a3461;--plate-accent:#f6c4d2;--accent:#f0a0b2;--accent-ink:#0d1229;--stock:#6f7fd0;--stock-deep:#4b5aa8;--sheet:#fbf5ff;--sheet-edge:#8a95c8;--cash:#5fd1a0;--ember:#ff8d8d}}
+:root[data-theme="dark"]{--plate:#070a18;--plate-ink:#f4eaf2;--plate-ink-2:#cdd3e9;--plate-ink-3:#8f9bc4;--plate-steel:#e6ecff;--plate-roller:#161d3c;--plate-rule:#2a3461;--plate-accent:#f6c4d2;--accent:#f0a0b2;--accent-ink:#0d1229;--stock:#6f7fd0;--stock-deep:#4b5aa8;--sheet:#fbf5ff;--sheet-edge:#8a95c8;--cash:#5fd1a0;--ember:#ff8d8d}
+@media (min-width:1500px){:root{--max:1640px}}
+body{font-size:16px}
+.hero{padding-block:36px 6px}
+.hero h1{font-size:clamp(76px,14.5vw,176px);line-height:.88;letter-spacing:-.035em}
+.hero .claims{font-size:clamp(18px,2.2vw,22px);line-height:1.45;margin-top:20px;max-width:34ch}
+.hero .claims li:first-child{font-weight:600}
+.hero .thesis{font-size:clamp(26px,3.1vw,36px);line-height:1.18;margin-top:26px;max-width:24ch}
+.hero .ctas{margin-top:24px;gap:18px}
+.bracket{font-size:14px;padding:8px 2px}
+.hero-aside{background:var(--raised);color:var(--ink);border:1.5px solid var(--ink);padding:20px 22px;font-size:15px}
+.hero-aside .mono{color:var(--ink-3)}
+.hero-aside dt{color:var(--ink-3)}
+.hero-aside dd{color:var(--ink)}
+.btn{font-size:13px;padding:9px 16px;border-width:1.5px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tape-row{font-size:13px;height:40px}
+.tape-row b{font-weight:600;color:var(--ink)}
+.eyebrow{font-size:12px;letter-spacing:.18em;color:var(--ink);font-weight:500}
+.eyebrow::before{content:'';display:inline-block;width:28px;height:2px;background:var(--accent);vertical-align:middle;margin-right:10px}
+h2{font-size:clamp(34px,4.2vw,54px);line-height:1.04;letter-spacing:-.015em}
+th{border-bottom:2px solid var(--ink);color:var(--ink)}
+td{font-size:14.5px}
+section.band{padding-block:64px;border-top:2px solid var(--ink)}
+.legend{font-size:12px;margin-top:12px}
+.legend i{width:14px;height:14px;border-color:var(--ink)}
+.chips button{font-size:12px;padding:7px 12px;border-color:var(--ink);color:var(--ink);background:transparent;border-width:1.5px}
+.chips button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.controls{font-size:13px}
+.seg{border-color:var(--ink);border-width:1.5px}
+.seg button{color:var(--ink-2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--page)}
+/* the plate: every token the drawing uses is re-scoped to a dark ground */
+.mill-section{padding-block:18px 10px}
+.plate{background:var(--plate);border:1.5px solid var(--plate-ink);--ink:var(--plate-ink);--ink-2:var(--plate-ink-2);--ink-3:var(--plate-ink-3);--steel:var(--plate-steel);--steel-hi:#8f8468;--roller:var(--plate-roller);--rule-strong:var(--plate-rule);--sunken:rgba(21,17,14,.06);--raised:var(--plate);--accent:var(--plate-accent);--neg:#8b2020;--warn:#9c6a00}
+.mill .flow.stock{stroke:var(--stock-deep)}
+.mill .flow.cash{stroke:#1f5c3b}
+.plate svg{min-width:1120px}
+@media (min-width:1100px){.plate svg{min-width:0}}
+.caption{background:var(--plate);border-top:1px solid var(--plate-rule);color:var(--plate-ink-2);font-size:13px;min-height:44px}
+.caption b{color:var(--plate-ink)}
+.mill text{font-size:12.5px;font-weight:500}
+.mill text.name{font-size:16px;letter-spacing:.08em;font-weight:600}
+.mill text.lbl{font-size:11.5px;font-weight:400}
+.mill .frame{stroke-width:2.2}
+.mill .fill{stroke-width:2.2}
+.mill .pipe-stock{stroke-width:13}
+.mill .pipe-cash{stroke-width:9;opacity:1}
+.mill .pipe-sheet{stroke-width:11}
+.mill .sheet-edge{stroke-width:1.5}
+#p-buyback,#p-sale,#p-cond,#p-tap1,#p-tap2{stroke-width:6}
+.mill .dotted{stroke-width:2;stroke-dasharray:3 5}
+.mill .wall{stroke-width:1.6;stroke-dasharray:6 5}
+.mill .chev{stroke-width:1.8}
+.mill .stockfill{opacity:.92}
+.mill .flow{stroke-width:3;opacity:.8}
+.mill .flow.stock{stroke:var(--sheet)}
+.mill .flow.cash{stroke:#c6f5da}
+.mill .st:hover .frame,.mill .st:hover .fill,.mill .st.is-active .frame,.mill .st.is-active .fill{stroke-width:3.2}
+/* panel: paper header, ink rule */
+.panel{border:1.5px solid var(--ink)}
+.panel header{background:var(--raised);color:var(--ink);border-bottom:2px solid var(--ink)}
+.panel header h3{font-size:17px;color:var(--ink)}
+.panel header .role{color:var(--ink-3)}
+.panel .close{color:var(--ink);border-color:var(--ink)}
+.tour .btn{color:var(--ink);border-color:var(--ink)}
+.tour .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.sig{font-size:13.5px}
+.chip.contract{color:var(--ink);border-color:var(--ink)}
+footer{border-top:2px solid var(--ink)}
+/* the tour */
+.tour{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--plate);border-top:1px solid var(--plate-rule);padding:12px 14px}
+.tour-text{flex:1;min-width:240px;color:var(--plate-ink);font-size:16px;line-height:1.45}
+.tour-n{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--plate-accent);margin-right:10px}
+.tour-nav{display:flex;gap:8px}
+.tour .btn{color:var(--plate-ink);border-color:var(--plate-ink-3)}
+.tour .btn.primary{background:var(--plate-accent);border-color:var(--plate-accent);color:var(--plate)}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="wordmark" href="#top" aria-label="Papermill home">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor"/><circle cx="8" cy="8" r="4" fill="none" stroke="currentColor"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/></svg>
+      papermill
+    </a>
+    <nav class="nav" aria-label="Sections">
+      <a href="#mill">The mill</a><a href="#run">Print run</a><a href="#layers">Two layers</a><a href="#limits">Limits</a>
+    </nav>
+    <div class="spacer"></div>
+    <div class="theme" role="group" aria-label="Theme">
+      <button type="button" data-theme-set="light" aria-pressed="true">paper</button>
+      <button type="button" data-theme-set="dark" aria-pressed="false">night</button>
+    </div>
+  </div>
+</header>
+
+<div class="tape" aria-label="Readouts">
+  <div class="tape-row" id="tape">
+    <span>NAV / PULP <b>—</b></span><span>NAV / MILL <b>—</b></span><span>7D TWAP <b>—</b></span><span>PREMIUM <b>—</b></span><span>EPOCH <b id="tape-epoch">#—</b></span><span>NEXT PRINT RUN <b>—</b></span><span>SELL TAX NOW <b>—</b></span><span>LOCKED MILL <b>—</b></span><span class="tape-note">static page · connect a feed</span>
+    <span>NAV / PULP <b>—</b></span><span>NAV / MILL <b>—</b></span><span>7D TWAP <b>—</b></span><span>PREMIUM <b>—</b></span><span>EPOCH <b>#—</b></span><span>NEXT PRINT RUN <b>—</b></span><span>SELL TAX NOW <b>—</b></span><span>LOCKED MILL <b>—</b></span><span class="tape-note">static page · connect a feed</span>
+  </div>
+</div>
+
+<main id="top">
+<section class="hero">
+  <div class="dither" id="dither" aria-hidden="true"></div>
+  <div class="wrap hero-grid">
+    <div>
+      <h1>papermill</h1>
+      <ul class="claims">
+        <li>stock in, sheet out</li>
+        <li>PULP redeems at NAV, through a queue</li>
+        <li>MILL trades at a premium and pays for the next run</li>
+        <li>one print run a week, nothing reverts</li>
+      </ul>
+      <div class="ctas">
+        <a class="bracket" href="#mill">the mill</a>
+        <a class="bracket" href="#run">print run</a>
+        <a class="bracket" href="#limits">limits</a>
+      </div>
+      <p class="thesis">The whole flywheel is a paper mill. Every part is a function. Click one.</p>
+    </div>
+    <aside class="hero-aside" aria-label="What this page is">
+      <div class="mono">DESIGN v0.2.1 · illustration, not live data · not deployed</div>
+      <dl>
+        <dt>Stock</dt><dd>USDC you deposit. You get PULP, a vault share you can always redeem at net asset value through a queue. The floor.</dd>
+        <dt>Sheet</dt><dd>MILL, the token the mill makes. Backed by PULP the controller holds, never redeemable, so it can trade at a premium. The fuel.</dd>
+        <dt>Steam</dt><dd>USDC yield from PAPER staked on Papertrade, an exchange outside this mill. It drives the print run.</dd>
+      </dl>
+    </aside>
+  </div>
+</section>
+
+<section class="mill-section" id="mill">
+  <div class="wrap">
+    <div class="eyebrow">The mill · wet end to dry end</div>
+    <div class="controls">
+      <span>Regime</span>
+      <div class="seg" role="group" aria-label="Regime shown">
+        <button type="button" data-regime="below" aria-pressed="true">Below NAV</button>
+        <button type="button" data-regime="above" aria-pressed="false">At or above NAV</button>
+        <button type="button" data-regime="premium" aria-pressed="false">Above 1.5×</button>
+      </div>
+      <label class="toggle"><input type="checkbox" id="outofband"> spot out of TWAP band</label>
+      <button type="button" class="btn primary" id="runbtn">Run the print run</button>
+      <button type="button" class="btn" id="tourbtn">Take the tour</button>
+      <span class="note">changes only which real branch is shown; no market values are invented</span>
+    </div>
+    <div class="mill-grid">
+      <div>
+        <div class="plate" id="plate">
+          <div class="scroller">
+<svg class="mill" viewBox="0 0 1440 560" role="img" aria-labelledby="mill-title mill-desc">
+  <title id="mill-title">The Papermill production line</title>
+  <desc id="mill-desc">A paper machine read left to right: stock chest, beater, headbox, press, scanner, dryer section, reel, with a drive flywheel, a chimney, a return header carrying USDC back to the stock chest, and a mill office. Each part is a contract surface.</desc>
+  <defs>
+    <marker id="chev" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M2 1 L7 5 L2 9" fill="none" stroke="var(--ink-3)" stroke-width="1"/></marker>
+    <filter id="fibre" x="0" y="0" width="1" height="1"><feTurbulence type="fractalNoise" baseFrequency="0.9 0.3" numOctaves="2" seed="7"/><feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .18 0"/><feComposite in2="SourceGraphic" operator="in"/></filter>
+    <radialGradient id="reelg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="var(--sheet)"/><stop offset="1" stop-color="var(--roller)"/></radialGradient>
+  </defs>
+
+  <!-- backdrop -->
+  <g id="backdrop">
+    <line x1="20" y1="420" x2="1420" y2="420" stroke="var(--rule-strong)" stroke-width="1"/>
+    <!-- chimney -->
+    <g class="st" data-station="chimney" tabindex="0" role="button" aria-label="Chimney: burn">
+      <rect class="hit" x="1030" y="30" width="60" height="260"/>
+      <rect class="frame" x="1040" y="40" width="30" height="240"/>
+      <rect x="1038" y="38" width="34" height="4" fill="var(--steel)"/>
+      <line x1="1040" y1="120" x2="1070" y2="120" stroke="var(--steel)"/><line x1="1040" y1="200" x2="1070" y2="200" stroke="var(--steel)"/>
+      <g id="motes"><circle class="ember" cx="1055" cy="60" r="2" opacity="0"/><circle class="ember" cx="1050" cy="66" r="2" opacity="0"/><circle class="ember" cx="1060" cy="64" r="2" opacity="0"/></g>
+      <text class="name" x="1080" y="52">Chimney</text>
+      <text class="lbl" x="1080" y="66">Mill.burn · supply down</text>
+    </g>
+    <!-- mill wall: external yield source -->
+    <rect class="wall" x="270" y="60" width="200" height="140"/>
+    <text class="lbl" x="280" y="76">PAPER staking · external yield source</text>
+    <text class="lbl" x="280" y="90">(Papertrade, outside the mill)</text>
+    <rect class="frame" x="290" y="110" width="40" height="22"/><text class="lbl" x="296" y="125">cap</text>
+    <rect class="frame" x="350" y="110" width="40" height="22"/><text class="lbl" x="356" y="125">cap</text>
+    <rect class="frame" x="410" y="110" width="40" height="22"/><text class="lbl" x="416" y="125">cap</text>
+    <text class="lbl" x="280" y="160">keeper-run accounts · per-account caps</text>
+    <!-- line shaft -->
+    <line x1="510" y1="410" x2="1300" y2="410" stroke="var(--steel)" stroke-width="1"/>
+    <circle class="fill" cx="790" cy="410" r="5"/><circle class="fill" cx="870" cy="410" r="5"/><circle class="fill" cx="1010" cy="410" r="5"/><circle class="fill" cx="1270" cy="410" r="5"/>
+    <!-- mill office -->
+    <g class="st" data-station="office" tabindex="0" role="button" aria-label="Mill office: governance">
+      <rect class="hit" x="1170" y="40" width="200" height="90"/>
+      <rect class="frame" x="1180" y="50" width="180" height="60"/>
+      <rect class="frame" x="1192" y="62" width="22" height="16"/><rect class="frame" x="1222" y="62" width="22" height="16"/><rect class="frame" x="1252" y="62" width="22" height="16"/><rect class="frame" x="1282" y="62" width="22" height="16"/><rect class="frame" x="1312" y="62" width="22" height="16"/>
+      <text class="name" x="1190" y="98">Mill office</text>
+      <text class="lbl" x="1190" y="124">owner · 48h timelock (spec)</text>
+      <text class="lbl" x="1190" y="138">limits only tighten</text>
+      <line x1="1300" y1="110" x2="1300" y2="410" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="1 3"/>
+    </g>
+  </g>
+
+  <!-- pipes -->
+  <g id="pipes">
+    <path id="p-deposit" class="pipe-stock" d="M140 60 L140 120"/>
+    <path id="p-stock1" class="pipe-stock" d="M210 330 L275 330"/>
+    <path id="p-stock2" class="pipe-stock" d="M465 330 L510 330 L510 210"/>
+    <path id="p-queue" class="pipe-stock" d="M210 380 L260 380"/>
+    <path id="p-buyback" class="pipe-stock" d="M580 312 L580 440 L620 450" stroke-width="4"/>
+    <path id="p-fund" class="dotted" d="M330 200 L330 268" marker-end="url(#chev)"/>
+    <path id="p-yield" class="dotted" d="M410 200 L410 268"/>
+    <path d="M410 222 L444 222" class="dotted"/><text class="lbl" x="448" y="225">10% fee → team</text>
+    <path id="p-sale" class="pipe-sheet" d="M790 382 L790 430" stroke-width="4"/>
+    <path id="p-cond" class="pipe-cash" d="M1120 182 L1120 430" stroke-width="3"/>
+    <path id="p-vent" class="ember" d="M1050 142 L1050 282" fill="none" stroke-width="2" stroke-dasharray="3 3"/>
+    <path id="p-tap1" class="pipe-cash" d="M790 480 L790 510" stroke-width="4"/>
+    <path id="p-tap2" class="pipe-cash" d="M1060 480 L1060 510" stroke-width="4"/>
+    <path id="p-return" class="pipe-cash" d="M1320 510 L30 510 L30 170 L70 170"/>
+    <path class="flow stock" d="M210 330 L275 330"/><path class="flow stock" d="M465 330 L510 330 L510 210"/>
+    <path class="flow cash" d="M1320 510 L30 510 L30 170 L70 170"/>
+    <g class="chev">
+      <polyline points="236,325 242,330 236,335"/><polyline points="486,325 492,330 486,335"/>
+      <polyline points="1240,505 1234,510 1240,515"/><polyline points="1000,505 994,510 1000,515"/><polyline points="760,505 754,510 760,515"/><polyline points="520,505 514,510 520,515"/><polyline points="280,505 274,510 280,515"/>
+      <polyline points="25,420 30,414 35,420"/><polyline points="25,300 30,294 35,300"/><polyline points="25,200 30,194 35,200"/>
+      <polyline points="575,380 580,386 585,380"/><polyline points="785,405 790,411 795,405"/><polyline points="1115,300 1120,306 1125,300"/>
+      <polyline points="135,96 140,102 145,96"/><polyline points="325,240 330,234 335,240"/><polyline points="405,236 410,242 415,236"/>
+    </g>
+    <text class="lbl" x="150" y="100">deposit USDC · min 10</text>
+    <text class="lbl" x="334" y="250">fundAccount ↑</text>
+    <text class="lbl" x="334" y="263">returnCash ↓</text>
+    <text class="lbl" x="414" y="250">receiveYield ↓</text>
+    <text class="lbl" x="590" y="400">buyback: redeem at NAV → buy MILL → burn</text>
+    <text class="lbl" x="800" y="400">MILL sold into the pool</text>
+    <text class="lbl" x="1128" y="400">sold above NAV → vault</text>
+    <text class="lbl" x="1058" y="300">burned below NAV</text>
+    <text class="lbl" x="600" y="540">RETURN HEADER · USDC back to stock · the flywheel closes here</text>
+    <text class="lbl" x="700" y="500">issuance: half → vault</text>
+    <text class="lbl" x="960" y="500">tax sold above NAV → vault</text>
+  </g>
+
+  <!-- pool trough -->
+  <g id="trough">
+    <rect class="frame" x="620" y="432" width="700" height="48" rx="4"/>
+    <rect x="621" y="433" width="698" height="46" fill="var(--sunken)" opacity=".6"/>
+    <text class="lbl" x="628" y="470">MILL / USDC pool · POL LP → 30-day timelock (spec)</text>
+    <g id="lpbadge"><rect class="frame" x="810" y="440" width="112" height="16" rx="8"/><text class="lbl" x="818" y="451">LP → 30-day lock</text></g>
+  </g>
+
+  <!-- sheet -->
+  <g id="sheet">
+    <path id="p-sheet" class="pipe-sheet" d="M632 300 L752 300 L828 300 L900 300 C910 300 915 215 940 212 C965 212 968 338 975 340 C985 340 990 212 1010 212 C1035 212 1040 338 1045 340 C1055 340 1060 212 1080 212 C1100 212 1110 300 1120 300 L1200 300 L1250 300 A70 70 0 0 1 1340 370"/>
+    <use href="#p-sheet" class="sheet-edge" transform="translate(0,-3)"/>
+  </g>
+
+  <!-- stations -->
+  <g id="stations">
+    <!-- stock chest -->
+    <g class="st" data-station="chest" tabindex="0" role="button" aria-label="Stock chest: Pulp vault">
+      <rect class="hit" x="56" y="110" width="230" height="300"/>
+      <rect class="frame" x="70" y="140" width="140" height="280" rx="10"/>
+      <rect class="stockfill" x="71" y="252" width="138" height="167" rx="8" filter="url(#fibre)"/>
+      <rect class="stockfill" x="71" y="252" width="138" height="167" rx="8"/>
+      <line x1="140" y1="150" x2="140" y2="400" stroke="var(--steel)"/>
+      <g class="spin" style="--dur:24s"><line x1="110" y1="320" x2="170" y2="320" stroke="var(--steel)" stroke-width="2"/><line x1="112" y1="372" x2="168" y2="372" stroke="var(--steel)" stroke-width="2"/></g>
+      <line x1="208" y1="330" x2="212" y2="330" stroke="var(--steel)"/>
+      <text class="name" x="80" y="164">Stock chest</text>
+      <text x="80" y="180">Pulp · PULP</text>
+      <text x="80" y="196">nav —   hardNav —</text>
+      <text class="lbl" x="80" y="212">hold 24h · vest 7d</text>
+      <text class="lbl" x="80" y="226">PAPER ≤ 1× cash</text>
+      <!-- payout dock -->
+      <rect class="frame" x="220" y="360" width="70" height="40" rx="3"/>
+      <rect class="fill" x="226" y="368" width="14" height="10"/><rect class="fill" x="244" y="368" width="14" height="10"/><rect class="fill" x="262" y="368" width="14" height="10"/>
+      <text class="lbl" x="222" y="392">queue · FIFO</text>
+      <text class="lbl" x="222" y="412">settles at report NAV</text>
+    </g>
+    <!-- beater -->
+    <g class="st" data-station="beater" tabindex="0" role="button" aria-label="Beater: keeper yield works and valuation">
+      <rect class="hit" x="268" y="250" width="210" height="160"/>
+      <ellipse class="frame" cx="370" cy="310" rx="95" ry="45"/>
+      <ellipse class="stockfill" cx="370" cy="318" rx="88" ry="30"/>
+      <line x1="290" y1="350" x2="290" y2="420" stroke="var(--steel)"/><line x1="450" y1="350" x2="450" y2="420" stroke="var(--steel)"/>
+      <g class="spin rev" style="--dur:40s"><circle class="fill" cx="390" cy="292" r="34"/>
+        <line x1="390" y1="258" x2="390" y2="326" stroke="var(--steel)"/><line x1="356" y1="292" x2="424" y2="292" stroke="var(--steel)"/><line x1="366" y1="268" x2="414" y2="316" stroke="var(--steel)"/><line x1="414" y1="268" x2="366" y2="316" stroke="var(--steel)"/></g>
+      <line class="dotted" x1="290" y1="380" x2="450" y2="380" stroke-dasharray="3.3 2"/>
+      <line x1="290" y1="380" x2="366" y2="380" stroke="var(--accent)" stroke-width="2" stroke-dasharray="3.3 2"/>
+      <text class="lbl" x="290" y="396">30d window · 14d ramp</text>
+      <text class="name" x="280" y="226">Beater</text>
+      <text x="280" y="242">Pulp keeper surface</text>
+    </g>
+    <!-- drive -->
+    <g class="st" data-station="drive" tabindex="0" role="button" aria-label="Drive: runEpoch, the print run">
+      <rect class="hit" x="360" y="340" width="160" height="80"/>
+      <rect class="frame" x="430" y="370" width="80" height="50" rx="3"/>
+      <g class="spin" id="flywheel" style="--dur:12s"><circle class="fill" cx="400" cy="384" r="32"/>
+        <circle cx="400" cy="384" r="30" fill="none" stroke="var(--accent)" stroke-width="1.5" opacity=".9"/>
+        <line x1="400" y1="354" x2="400" y2="414" stroke="var(--steel)"/><line x1="370" y1="384" x2="430" y2="384" stroke="var(--steel)"/><line x1="379" y1="363" x2="421" y2="405" stroke="var(--steel)"/><line x1="421" y1="363" x2="379" y2="405" stroke="var(--steel)"/></g>
+      <circle id="ring" cx="400" cy="384" r="36" fill="none" stroke="var(--accent)" stroke-width="3" stroke-dasharray="226" stroke-dashoffset="226" transform="rotate(-90 400 384)"/>
+      <text class="name" x="438" y="390">Drive</text>
+      <text class="lbl" x="438" y="404">runEpoch · 7d</text>
+      <text class="lbl" x="438" y="416">retry 1h</text>
+    </g>
+    <!-- headbox -->
+    <g class="st" data-station="headbox" tabindex="0" role="button" aria-label="Headbox: the regime rule">
+      <rect class="hit" x="500" y="150" width="170" height="170"/>
+      <polygon class="frame" points="510,200 650,200 630,310 530,310"/>
+      <polygon class="stockfill" points="512,202 648,202 640,250 520,250"/>
+      <line x1="610" y1="304" x2="632" y2="304" stroke="var(--steel)" stroke-width="2"/><line x1="610" y1="310" x2="632" y2="310" stroke="var(--steel)" stroke-width="2"/>
+      <!-- gauge -->
+      <path d="M548 290 A26 26 0 0 1 600 290" fill="none" stroke="var(--steel)"/>
+      <line x1="552" y1="286" x2="556" y2="280" stroke="var(--steel)"/><line x1="574" y1="264" x2="574" y2="270" stroke="var(--steel)"/><line x1="596" y1="286" x2="592" y2="280" stroke="var(--steel)"/>
+      <line id="needle" x1="574" y1="290" x2="556" y2="276" stroke="var(--accent)" stroke-width="2"/>
+      <text class="lbl" x="536" y="302">0.7×</text><text class="lbl" x="566" y="262">1.0×</text><text class="lbl" x="598" y="302">1.5×</text>
+      <text class="name" x="516" y="164">Headbox</text>
+      <text x="516" y="180">regime rule · controller</text>
+      <text class="lbl" x="516" y="194">navPerToken —</text>
+    </g>
+    <!-- press -->
+    <g class="st" data-station="press" tabindex="0" role="button" aria-label="Press: issuance">
+      <rect class="hit" x="700" y="150" width="180" height="260"/>
+      <rect class="frame" x="740" y="200" width="100" height="220"/>
+      <g class="spin" style="--dur:30s"><circle class="fill" cx="790" cy="258" r="38"/><path d="M760 240 A38 38 0 0 1 790 220" fill="none" stroke="var(--steel-hi)" stroke-width="2"/><line x1="790" y1="222" x2="790" y2="258" stroke="var(--steel)"/></g>
+      <g class="spin rev" style="--dur:30s"><circle class="fill" cx="790" cy="342" r="38"/><path d="M760 324 A38 38 0 0 1 790 304" fill="none" stroke="var(--steel-hi)" stroke-width="2"/><line x1="790" y1="342" x2="790" y2="378" stroke="var(--steel)"/></g>
+      <circle class="frame" cx="720" cy="220" r="22"/>
+      <line x1="720" y1="220" x2="734" y2="206" stroke="var(--neg)" stroke-width="2"/><line x1="708" y1="206" x2="712" y2="210" stroke="var(--steel)"/>
+      <text class="lbl" x="706" y="252">TWAP/nav</text>
+      <text class="name" x="706" y="164">Press</text>
+      <text x="706" y="180">issuance · runs only ≥ 1.5× NAV</text>
+      <text class="lbl" x="706" y="194">tranche ≤ 2% supply · ≤ 2% pool</text>
+    </g>
+    <!-- scanner -->
+    <g class="st" data-station="scanner" tabindex="0" role="button" aria-label="Scanner: TwapOracle">
+      <rect class="hit" x="840" y="150" width="60" height="270"/>
+      <line x1="850" y1="210" x2="850" y2="420" stroke="var(--ink-3)"/><line x1="890" y1="210" x2="890" y2="420" stroke="var(--ink-3)"/><line x1="850" y1="210" x2="890" y2="210" stroke="var(--ink-3)"/>
+      <rect id="scanhead" class="blink" x="864" y="270" width="12" height="16" fill="var(--ink-3)"/>
+      <text class="name" x="846" y="126">Scanner</text>
+      <text class="lbl" x="846" y="140">TwapOracle</text>
+      <text class="lbl" x="846" y="154">7d TWAP · ±3%</text>
+    </g>
+    <!-- dryer -->
+    <g class="st" data-station="dryer" tabindex="0" role="button" aria-label="Dryer section: the tax hook">
+      <rect class="hit" x="900" y="130" width="230" height="290"/>
+      <polygon class="frame" points="900,180 1120,180 1010,140"/>
+      <g class="spin" style="--dur:36s"><circle class="fill" cx="940" cy="240" r="30"/><line x1="940" y1="210" x2="940" y2="240" stroke="var(--steel)"/></g>
+      <g class="spin" style="--dur:36s"><circle class="fill" cx="1010" cy="240" r="30"/><line x1="1010" y1="210" x2="1010" y2="240" stroke="var(--steel)"/></g>
+      <g class="spin" style="--dur:36s"><circle class="fill" cx="1080" cy="240" r="30"/><line x1="1080" y1="210" x2="1080" y2="240" stroke="var(--steel)"/></g>
+      <g class="spin rev" style="--dur:36s"><circle class="fill" cx="975" cy="310" r="30"/><line x1="975" y1="310" x2="975" y2="340" stroke="var(--steel)"/></g>
+      <g class="spin rev" style="--dur:36s"><circle class="fill" cx="1045" cy="310" r="30"/><line x1="1045" y1="310" x2="1045" y2="340" stroke="var(--steel)"/></g>
+      <text class="name" x="906" y="164">Dryer section</text>
+      <text class="lbl" x="906" y="176">buy 1% · sell 2% → 5% at −10% vs TWAP</text>
+      <text class="lbl" x="906" y="396">Mill tax hook · _processTax</text>
+    </g>
+    <!-- reel -->
+    <g class="st" data-station="reel" tabindex="0" role="button" aria-label="Reel: MILL in the market and VeLocker">
+      <rect class="hit" x="1180" y="250" width="200" height="170"/>
+      <g class="spin" style="--dur:28s"><circle cx="1270" cy="370" r="50" fill="url(#reelg)" stroke="var(--steel)"/>
+        <line x1="1220" y1="370" x2="1320" y2="370" stroke="var(--steel)"/><line x1="1270" y1="320" x2="1270" y2="420" stroke="var(--steel)"/></g>
+      <circle class="frame" cx="1270" cy="370" r="70"/><circle class="frame" cx="1270" cy="370" r="30"/><circle cx="1270" cy="370" r="12" fill="var(--steel)"/>
+      <!-- rack -->
+      <line x1="1345" y1="236" x2="1345" y2="420" stroke="var(--steel)"/><line x1="1375" y1="236" x2="1375" y2="420" stroke="var(--steel)"/>
+      <line x1="1345" y1="266" x2="1375" y2="266" stroke="var(--steel)"/><line x1="1345" y1="316" x2="1375" y2="316" stroke="var(--steel)"/><line x1="1345" y1="366" x2="1375" y2="366" stroke="var(--steel)"/>
+      <circle class="fill" cx="1360" cy="252" r="10"/><circle class="fill" cx="1360" cy="302" r="12"/><circle class="fill" cx="1360" cy="350" r="14"/>
+      <text class="lbl" x="1380" y="256">1w · 1×</text><text class="lbl" x="1380" y="306">lock</text><text class="lbl" x="1380" y="354">52w · 4×</text>
+      <text class="name" x="1186" y="270">Reel</text>
+      <text class="lbl" x="1186" y="284">MILL in the market · VeLocker</text>
+    </g>
+    <!-- return header hit -->
+    <g class="st" data-station="return" tabindex="0" role="button" aria-label="Return header: USDC back to the vault">
+      <path class="hit" d="M1320 510 L30 510 L30 170 L70 170" fill="none" stroke="transparent" stroke-width="18" pointer-events="stroke"/>
+    </g>
+  </g>
+  <g id="pulses"></g>
+  <g id="tags"></g>
+</svg>
+          </div>
+          <div class="caption" id="caption"><span class="step">idle</span><span>Select a part of the mill, take the tour, or run the print run. Order inside <b>runEpoch</b>: allocate, then tax, then issue. The issuance tranche moves spot the most, so it runs last.</span></div>
+          <div class="tour" id="tour" hidden>
+            <div class="tour-text"><span class="tour-n" id="tour-n"></span><span id="tour-say"></span></div>
+            <div class="tour-nav"><button type="button" class="btn" id="tour-prev">Back</button><button type="button" class="btn primary" id="tour-next">Next</button><button type="button" class="btn" id="tour-exit">Exit</button></div>
+          </div>
+        </div>
+        <div class="legend">
+          <span><i style="background:var(--stock)"></i>liquid stock = PULP (vault)</span>
+          <span><i style="background:var(--sheet)"></i>sheet = MILL (token)</span>
+          <span><i style="background:var(--cash)"></i>return header = USDC back to the vault</span>
+          <span><i style="background:var(--ember)"></i>burn</span>
+          <span><i style="border-style:dashed;background:transparent"></i>dotted = external yield source</span>
+        </div>
+        <div class="chips" id="chips" role="tablist" aria-label="Stations"></div>
+      </div>
+      <div class="dock" id="dock">
+        <div class="handle" aria-hidden="true"></div>
+        <div class="panel" id="panel" role="region" aria-live="polite" aria-label="Station panel">
+          <div class="empty">Select a part of the mill</div>
+        </div>
+      </div>
+      <div class="scrim" id="scrim"></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="run">
+  <div class="wrap two">
+    <div>
+      <div class="eyebrow">The print run</div>
+      <h2>One epoch, every seven days.</h2>
+      <div class="prose" style="margin-top:14px;color:var(--ink-2)">
+        <p>Once a week, at the same block height, the keeper delivers the claimed yield and posts the report. Then anyone at all can start the press. Nothing inside the run reverts: a swap that falls outside the price band is deferred and retried an hour later, a deposit the vault would reject is buffered, and a carried buyback is dropped rather than executed above NAV.</p>
+        <p>The line reads headbox, press, dryer. The code runs allocate, tax, issue. The issuance tranche moves spot the most, so it goes last.</p>
+      </div>
+      <div class="gauge-wrap">
+        <svg viewBox="0 0 320 120" role="img" aria-label="Regime gauge: buyback share against premium">
+          <style>.g text{font-family:var(--font-mono);font-size:9px;fill:var(--ink-3)}</style>
+          <g class="g">
+            <rect x="24" y="24" width="96" height="40" fill="var(--neg)" opacity=".12"/><rect x="120" y="24" width="96" height="40" fill="var(--stock)" opacity=".25"/><rect x="216" y="24" width="88" height="40" fill="var(--pos)" opacity=".14"/>
+            <polyline points="24,28 120,64" fill="none" stroke="var(--accent)" stroke-width="2"/>
+            <polyline points="24,49 120,64" fill="none" stroke="var(--accent)" stroke-width="1" stroke-dasharray="3 3"/>
+            <line x1="24" y1="64" x2="304" y2="64" stroke="var(--rule-strong)"/>
+            <text x="16" y="80">0.7×</text><text x="110" y="80">1.0×</text><text x="206" y="80">1.5×</text><text x="292" y="80">1.8×</text>
+            <text x="28" y="18">buyback 100% → 0%</text><text x="124" y="18">compound</text><text x="220" y="18">issue a tranche</text>
+            <text x="28" y="100">dashed: damped ×0.4 while mint rate is rich</text>
+            <text x="28" y="112">x = 7-day TWAP ÷ NAV per token</text>
+          </g>
+        </svg>
+        <div class="cap">defaults from DESIGN s10; floors and ceilings in code · fullDiscount 30% · richDamping 60%</div>
+      </div>
+    </div>
+    <ol class="steps">
+      <li><span class="n"></span><div><h3>Keeper delivers yield and posts the report</h3><p>The team fee comes off at the door. The rest vests into NAV over seven days. The report is bounded, then settles the redemption queue at this NAV.</p><div class="calls">receiveYield · report</div><div class="where">beater · stock chest</div></div></li>
+      <li><span class="n"></span><div><h3>Anyone runs the press</h3><p>Allocate yield: buy back and burn below NAV, compound otherwise. Process tax: sold into vault shares above NAV, burned below, inside one per-epoch pool budget. Issue above 1.5×: one tranche per epoch, half to vault shares, half to protocol-owned liquidity. Flush any buffered deposit.</p><div class="calls">TreasuryController.runEpoch</div><div class="where">drive · headbox · dryer · press · return header</div></div></li>
+      <li><span class="n"></span><div><h3>Anyone pays the queue</h3><p>Settled redemptions are paid first in, first out, partially if cash is short. A payee the token refuses is converted to a claim so no one behind them is frozen.</p><div class="calls">processPayouts · claimPayout</div><div class="where">stock chest</div></div></li>
+      <li><span class="n"></span><div><h3>Locker distribution</h3><p>Off in v1. The distributor is set by governance.</p><div class="calls">VeLocker.distribute</div><div class="where">reel</div></div></li>
+      <li><span class="n"></span><div><h3>Snapshot</h3><p>The mill floor is archived on-chain by hash and on IPFS. Not a contract call.</p><div class="where">off-chain</div></div></li>
+    </ol>
+  </div>
+</section>
+
+<section class="band" id="layers">
+  <div class="wrap">
+    <div class="eyebrow">Two layers</div>
+    <h2>The token holds vault shares and nothing else.</h2>
+    <div class="table-wrap" style="margin-top:18px">
+      <table class="stack">
+        <thead><tr><th>Layer</th><th>Instrument</th><th>Redeemable</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td data-k="Layer" class="m">1</td><td data-k="Instrument"><b>Pulp</b> share, PULP</td><td data-k="Redeemable">yes, at NAV, through a queue</td><td data-k="Role">the floor</td></tr>
+          <tr><td data-k="Layer" class="m">2</td><td data-k="Instrument"><b>Mill</b>, MILL</td><td data-k="Redeemable">no</td><td data-k="Role">the fuel</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="prose" style="margin-top:16px;color:var(--ink-2)">Its premium over NAV is the only thing allowed to be reflexive. Premium is simply MILL's seven-day average price divided by NAV per token: at 1.0 the market pays exactly what the backing is worth, at 1.5 it pays a dollar and a half for every dollar of backing, and because MILL cannot be redeemed that gap can exist. The mill harvests it: above 1.5× it sells new MILL and puts the proceeds behind every token; below 1.0× it spends yield to buy MILL back and burn it.</p>
+    <div class="ledger">
+      <div class="stock"><h3>Stock · USDC and PULP</h3><ol><li><code>deposit</code> at the vesting-smoothed NAV, to yourself only</li><li><code>fundAccount</code> to capped keeper accounts, never reserved cash</li><li><code>receiveYield</code> back, fee off the top, vests 7 days</li><li><code>requestRedeem</code> → settled at the next report → <code>processPayouts</code> FIFO</li></ol></div>
+      <div class="sheet"><h3>Sheet · MILL</h3><ol><li><code>mint</code> only by the controller, inside a per-epoch cap</li><li>tax on pool trades to the controller, as the increment of the batch</li><li>sold above NAV into vault shares, burned below</li><li><code>lock</code> 1 to 52 weeks for 1× to 4× weight; <code>kick</code> an expired lock back to 1×</li></ol></div>
+      <div class="steam"><h3>Steam · yield</h3><ol><li>keeper-only intake, one window ≤ 20% of principal</li><li>7-day linear vest into NAV</li><li>valued on closed daily samples over a 30-day window, divided by capRate 4.0</li><li>never worth more than 1× the cash held</li></ol></div>
+    </div>
+  </div>
+</section>
+
+<section class="band" id="limits">
+  <div class="wrap">
+    <div class="eyebrow">Limits are one-way</div>
+    <h2>The nameplate.</h2>
+    <p class="prose" style="margin:12px 0 18px;color:var(--ink-2)">Defaults are starting points from the design, set at deploy. Floors and ceilings are in the code and the owner, behind a 48-hour timelock, can only move toward them.</p>
+    <div class="table-wrap">
+      <table class="stack">
+        <thead><tr><th>Parameter</th><th>Default</th><th>In code</th><th>Owner may</th></tr></thead>
+        <tbody>
+          <tr><td data-k="Parameter">capRate, PAPER valuation</td><td data-k="Default" class="m">4.0</td><td data-k="In code" class="m">floor 0.5 · MIN_CAP_RATE_BPS</td><td data-k="Owner may" class="dir">raise toward conservative</td></tr>
+          <tr><td data-k="Parameter">PAPER leg cap vs cash held</td><td data-k="Default" class="m">1.0×</td><td data-k="In code" class="m">0.1× to 3× · MIN/MAX_PAPER_CAP_BPS</td><td data-k="Owner may" class="dir">set within band</td></tr>
+          <tr><td data-k="Parameter">Yield intake per window</td><td data-k="Default" class="m">20% of principal</td><td data-k="In code" class="m">floor 1% · MIN_YIELD_CAP_BPS</td><td data-k="Owner may" class="dir">lower only</td></tr>
+          <tr><td data-k="Parameter">Yield vest into NAV</td><td data-k="Default" class="m">7 days</td><td data-k="In code" class="m">YIELD_VEST</td><td data-k="Owner may" class="dir">fixed</td></tr>
+          <tr><td data-k="Parameter">Valuation window · warm-up</td><td data-k="Default" class="m">30 d · 14 d ramp</td><td data-k="In code" class="m">WINDOW_SPAN · 7 to 30 d</td><td data-k="Owner may" class="dir">warm-up within range</td></tr>
+          <tr><td data-k="Parameter">Holding period</td><td data-k="Default" class="m">24 h</td><td data-k="In code" class="m">MIN_HOLD</td><td data-k="Owner may" class="dir">fixed</td></tr>
+          <tr><td data-k="Parameter">Report bound</td><td data-k="Default" class="m">≤ 120%</td><td data-k="In code" class="m">of max(net funded, recognised equity) · REPORT_UPSIDE_BPS</td><td data-k="Owner may" class="dir">fixed</td></tr>
+          <tr><td data-k="Parameter">Team fee</td><td data-k="Default" class="m">10% of gross yield</td><td data-k="In code" class="m">ceiling 15% · MAX_TEAM_FEE_BPS</td><td data-k="Owner may" class="dir">lower only</td></tr>
+          <tr><td data-k="Parameter">Issuance threshold</td><td data-k="Default" class="m">1.5× NAV</td><td data-k="In code" class="m">floor 1.2× · MIN_ISSUANCE_THRESHOLD_BPS</td><td data-k="Owner may" class="dir">raise only</td></tr>
+          <tr><td data-k="Parameter">Issuance per epoch</td><td data-k="Default" class="m">2% supply · 2% pool</td><td data-k="In code" class="m">ceilings 3% · 5%, floors 0.1% · per-epoch across retries</td><td data-k="Owner may" class="dir">lower only</td></tr>
+          <tr><td data-k="Parameter">Buyback per epoch</td><td data-k="Default" class="m">2% of pool USDC</td><td data-k="In code" class="m">ceiling 5%, floor 0.1%</td><td data-k="Owner may" class="dir">lower only</td></tr>
+          <tr><td data-k="Parameter">Swap gate vs TWAP</td><td data-k="Default" class="m">±3%</td><td data-k="In code" class="m">ceiling 10%, floor 0.5%</td><td data-k="Owner may" class="dir">lower only</td></tr>
+          <tr><td data-k="Parameter">POL share of issuance</td><td data-k="Default" class="m">50%</td><td data-k="In code" class="m">20% to 80%</td><td data-k="Owner may" class="dir">set within band</td></tr>
+          <tr><td data-k="Parameter">Buy tax · sell tax</td><td data-k="Default" class="m">1% · 2% → 5%</td><td data-k="In code" class="m">ceiling 5% · MAX_TAX_BPS</td><td data-k="Owner may" class="dir">lower only · trigger raise only</td></tr>
+          <tr><td data-k="Parameter">Lock weight</td><td data-k="Default" class="m">1× to 4× over 52 weeks</td><td data-k="In code" class="m">boostBps · expired locks kick to 1×</td><td data-k="Owner may" class="dir">fixed</td></tr>
+          <tr><td data-k="Parameter">Epoch</td><td data-k="Default" class="m">7 days</td><td data-k="In code" class="m">7 to 90 days</td><td data-k="Owner may" class="dir">lengthen within range</td></tr>
+          <tr><td data-k="Parameter">Oracle, stale mode</td><td data-k="Default" class="m">anyone after 6 h</td><td data-k="In code" class="m">step clamped ±5% · first observation updater-only</td><td data-k="Owner may" class="dir">fixed</td></tr>
+          <tr><td data-k="Parameter">Governance delay · POL LP lock</td><td data-k="Default" class="m">48 h · 30 days</td><td data-k="In code" class="m">spec, DESIGN s2</td><td data-k="Owner may" class="dir">—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+
+<section class="band listview" id="listview">
+  <div class="wrap">
+    <div class="eyebrow">List view</div>
+    <h2>Every part, as text.</h2>
+    <div id="listview-body" style="margin-top:12px"></div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <div class="eyebrow">Contracts</div>
+        <ul>
+          <li>Pulp.sol <span>— not deployed —</span></li>
+          <li>Mill.sol <span>— not deployed —</span></li>
+          <li>TreasuryController.sol <span>— not deployed —</span></li>
+          <li>VeLocker.sol <span>— not deployed —</span></li>
+          <li>TwapOracle.sol <span>— not deployed —</span></li>
+        </ul>
+      </div>
+      <div>
+        <div class="eyebrow">Governance</div>
+        <ul>
+          <li>2-of-3 Safe behind a 48-hour TimelockController <span>(spec)</span></li>
+          <li>POL LP tokens in a 30-day timelock <span>(spec)</span></li>
+          <li>Ownable2Step on all five contracts</li>
+        </ul>
+      </div>
+    </div>
+    <div class="status">Design v0.2.1 · parameters are starting points for the simulator, not final · Papertrade is referenced only as the external source of PAPER staking yield. Papermill is not affiliated with Papertrade.</div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  // ---------- theme
+  var root=document.documentElement;
+  function applyTheme(t){ if(t==='auto'){root.removeAttribute('data-theme');} else {root.setAttribute('data-theme',t);} document.querySelectorAll('[data-theme-set]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-theme-set')===t));}); }
+  // paper is the default regardless of the system setting; night only when chosen
+  var saved='light'; try{saved=localStorage.getItem('pm-theme')||'light';}catch(e){}
+  if(saved!=='dark')saved='light';
+  applyTheme(saved);
+  document.querySelectorAll('[data-theme-set]').forEach(function(b){b.addEventListener('click',function(){var t=b.getAttribute('data-theme-set');applyTheme(t);try{localStorage.setItem('pm-theme',t);}catch(e){}});});
+
+  // ---------- dither (Bayer 8x8 halftone, like uncoated stock under a press)
+  try{
+    var c=document.createElement('canvas');c.width=200;c.height=200;var ctx=c.getContext('2d');
+    var ink=getComputedStyle(root).getPropertyValue('--ink').trim()||'#2a2520';
+    var B=[[0,32,8,40,2,34,10,42],[48,16,56,24,50,18,58,26],[12,44,4,36,14,46,6,38],[60,28,52,20,62,30,54,22],[3,35,11,43,1,33,9,41],[51,19,59,27,49,17,57,25],[15,47,7,39,13,45,5,37],[63,31,55,23,61,29,53,21]];
+    ctx.fillStyle=ink;
+    for(var y=0;y<200;y+=2){for(var x=0;x<200;x+=2){var v=(Math.sin(x*.07)*Math.cos(y*.05)+1)*.5*0.55+0.08;var t=B[(y>>1)&7][(x>>1)&7]/64;if(v>t){ctx.globalAlpha=.16;ctx.fillRect(x,y,1,1);}}}
+    document.getElementById('dither').style.backgroundImage='url('+c.toDataURL()+')';
+  }catch(e){}
+
+  // ---------- station content (authored from the contracts as of v0.2.1)
+  var S={
+    chest:{name:'Stock chest',role:'Pulp vault · PULP · the floor',chips:['Pulp.sol'],
+      summary:'USDC goes in, PULP comes out at the vesting-smoothed NAV. PULP leaves through a queue priced at the next report. The vault keeps an exact ledger of its idle cash, so money that arrives outside the accounted flows can never be counted twice.',
+      fns:[
+        {sig:'deposit(uint256 assets, address receiver) → shares',caller:'anyone',effect:'Mints PULP to the caller at nav(); the first deposit maps 1 USDC to 1 share. Restarts the depositor\'s holding clock outright.',guards:['receiver must be msg.sender · ReceiverMustBeSender (no one can restart your clock for 10 USDC)','assets ≥ 10 USDC · MIN_DEPOSIT','Insolvent while settled payouts exceed idle + on-accounts cash; ZeroNav if nav() is 0','principal += assets; trackedIdle += assets']},
+        {sig:'requestRedeem(uint256 shares) → requestId',caller:'anyone',effect:'Escrows the shares. Priced at the NAV of the next keeper report, not now, and paid in order.',guards:['block.timestamp ≥ lastDepositAt + 1 day · MIN_HOLD · HoldPeriod','request worth ≥ 10 USDC at current NAV · BelowMinimum (dust cannot stuff the settlement batch)','at most 8 open requests per address · MAX_OPEN_REQUESTS · TooManyRequests']},
+        {sig:'processPayouts(uint256 max) → paid',caller:'anyone',effect:'Pays settled payouts first-in-first-out from idle cash, partially if short. A payee the token refuses becomes a claim and the queue moves on.',guards:['cash earmarked for claims is never spent on later payouts · totalClaimable','trackedIdle falls only by what actually left']},
+        {sig:'claimPayout() → amount',caller:'anyone',effect:'Pulls a settled payout that could not be pushed to you.',guards:['NothingToClaim if none; ReservedCash until enough cash is back']},
+      ],
+      reads:['nav() = idle + onAccounts + paperPositionValue − owed − lockedYieldNow','hardNav() = the same without the PAPER leg','navPerShare() · freeCash() · lockedYieldNow() · pendingRequests() · pendingPayouts() · principal · trackedIdle'],
+      inside:['_settleRequests: prices every pending request at nav(); a zero NAV means "cannot price" and requests wait rather than burn for nothing','_update: a mint restarts the recipient\'s clock; a transfer blends both clocks share-weighted; shares sent straight to the vault outside requestRedeem are rejected · DirectTransferToVault'],
+      spec:'DESIGN s3. Known residual: a two-address route (mint at a throwaway, transfer to a seasoned address) still blends the clock, and a deposit can front-run a public report. Both are removed only by queueing deposits to the next report, a product decision left open in s13.',
+      related:['beater','return','drive']},
+    beater:{name:'Beater',role:'Pulp keeper surface · yield in, position valued',chips:['Pulp.sol'],
+      summary:'The keeper funds capped Papertrade accounts, brings cash back, delivers yield, and posts the weekly report. Every number the keeper touches is bounded against something the keeper cannot shrink.',
+      fns:[
+        {sig:'fundAccount(address account, uint256 amount)',caller:'keeper',effect:'Sends idle USDC to a registered account.',guards:['account active · UnknownAccount; sent + amount ≤ cap · AccountCapExceeded','amount ≤ freeCash(): cash owed to the queue never leaves · ReservedCash','recognisedOnAccounts += amount; trackedIdle −= amount']},
+        {sig:'returnCash(address account, uint256 amount)',caller:'keeper',effect:'Pulls approved USDC back from an account.',guards:['totalReturned += amount; cashOnAccounts and recognisedOnAccounts −= amount']},
+        {sig:'receiveYield(uint256 amount)',caller:'keeper',effect:'The only way yield enters. Team fee off the top; the net vests into NAV linearly over 7 days and feeds the daily samples.',guards:['fee = amount × teamFeeBps / 10 000, ceiling 15% · MAX_TEAM_FEE_BPS, lower-only','one open window ≤ 20% of principal · yieldCapBps · YieldTooLarge (principal is deposits less payouts: holders can shrink it, the keeper cannot)','lockedYield = lockedYieldNow() + net; YIELD_VEST 7 days']},
+        {sig:'report(uint256 cashOnAccounts, uint256 paperStaked, uint256 mintRate)',caller:'keeper',effect:'Posts the account truth, then settles up to 100 pending redemptions at this NAV.',guards:['first classifies any cash that arrived outside returnCash as returned principal · _recogniseStray','cashOnAccounts ≤ 120% of max(net funded, last accepted equity) · REPORT_UPSIDE_BPS · ReportOutOfBounds (the high-water mark keeps honest reports open after real gains are returned)','mintRate ≤ 1000']},
+        {sig:'settleRequests(uint256 max)',caller:'keeper',effect:'Settles more of the queue on the same NAV basis.',guards:[]},
+        {sig:'pokeSample()',caller:'anyone',effect:'Closes the open daily sample once a day has passed.',guards:['SAMPLE_SPAN 1 day; 30-sample ring']},
+      ],
+      reads:['paperPositionValue(): closed samples only, exactly a 30-day time window (the edge sample pro-rated), annualised ÷ capRate 4.0, ramped in linearly over the 14-day warm-up, and never above hardNav × maxPaperBps (1× by default) · the bound that actually constrains NAV','trailingYield() (informational, includes the open sample) · reportedMintRate · paperStaked (reported, never used in valuation) · recognisedOnAccounts · totalFunded · totalReturned · accounts(address)'],
+      inside:['_recogniseStray: idle above the ledger lowers net funded cash and recognised equity, so the same dollars cannot sit in idle and be claimed on accounts. Builder fees should arrive through receiveYield, or be acknowledged by governance with recogniseInflow.'],
+      spec:'DESIGN s3 and s11. The position is valued by the cash it pays, not by reported PAPER units, and that value is capped at the cash held.',
+      related:['chest','headbox','office']},
+    headbox:{name:'Headbox',role:'TreasuryController · the regime rule',chips:['TreasuryController.sol','Pulp.sol'],
+      summary:'Where stock becomes sheet. The controller takes its share of the week\'s yield and one rule splits it: nothing is spent at or above NAV, and a rising share is bought back and burned below it.',
+      fns:[
+        {sig:'Pulp.takeYieldBudget() → amount',caller:'controller',effect:'Returns the net yield delivered since the controller last asked, and zeroes the counter.',guards:[]},
+        {sig:'allocateYield(priceQ, navPerTokenQ, yieldUsdc, mintRateE18) → (buyback, compound)',caller:'view',effect:'The rule itself, as a public view. Premium ≥ 1.0× → 0% buyback. Below NAV the share rises linearly to 100% at a 30% discount, damped by up to 60% while the mint rate is rich (30 to 100).',guards:['fullDiscountBps < 10 000 · richDampingBps ≤ 10 000 · rateRichHi > rateRichLo']},
+        {sig:'_allocateYield (inside runEpoch)',caller:'auto',effect:'budget = takeYieldBudget × vaultShareBps. Buyback = the rule plus any buyback carried from an earlier gated run this epoch. Capped at 2% of pool USDC and at the vault\'s free cash.',guards:['if twap ≥ navPerToken the carry is dropped, never executed at a premium','gate: spot ≤ TWAP × 1.03, else the amount is carried · deferredBuybackUsdc · hasDeferred','a carry resets when a fresh epoch begins']},
+        {sig:'Pulp.redeemForController(uint256 amount) → shares',caller:'controller',effect:'Burns controller PULP at nav() for USDC to fund the buyback; the USDC is swapped for MILL and burned in the same transaction.',guards:['amount ≤ freeCash() · ReservedCash; ZeroNav','principal −= amount; trackedIdle −= amount']},
+      ],
+      reads:['vaultShareBps() · navPerToken() · allocation() · Pulp.yieldBudget · Pulp.reportedMintRate'],
+      inside:[],spec:'DESIGN s4. Yield belongs to the whole vault; the controller takes only its pro-rata share. The compound part never leaves the vault, which is why no pipe is drawn for it.',
+      related:['beater','chimney','drive']},
+    press:{name:'Press',role:'issuance · runs only above 1.5× NAV',chips:['TreasuryController.sol','Mill.sol'],
+      summary:'When the seven-day average price is at least 1.5× NAV per token, one tranche of new MILL is minted and sold. Half the proceeds become vault shares behind every token; half becomes protocol-owned liquidity whose LP sits in a 30-day timelock.',
+      fns:[
+        {sig:'_maybeIssue (inside runEpoch, last)',caller:'auto',effect:'Guard ladder in code order, then size, mint, sell, split.',guards:['navQ = 0 → skip; twap / navQ < 1.5× (floor 1.2× · MIN_ISSUANCE_THRESHOLD_BPS) → skip','spot < TWAP × 0.97 → IssuanceSkipped, deferred','allowance = min(2% of supply, 2% of pool tokens) minus issuedThisEpoch: the cap is per epoch across retries · ceilings 3% · 5%','sale sized so sale + POL side fits the allowance; POL share 50% (20% to 80% in code)']},
+        {sig:'Mill.mint(address to, uint256 amount)',caller:'controller',effect:'The only mint path after the launcher\'s initial supply.',guards:['NotController']},
+        {sig:'router.addLiquidity(MILL, USDC, …, polLpHolder)',caller:'auto',effect:'Pairs the POL half with freshly minted MILL; LP tokens go to the 30-day timelock; unused MILL is burned.',guards:[]},
+        {sig:'_depositToVault / _flushVaultDeposit',caller:'auto',effect:'The vault half becomes controller-owned PULP. A deposit below the vault minimum, or one the vault rejects, is buffered and retried rather than reverting the epoch.',guards:['pendingVaultDeposit · try/catch around Pulp.deposit']},
+      ],
+      reads:['limits() · issuedThisEpoch · pendingVaultDeposit · polLpHolder'],inside:[],
+      spec:'DESIGN s5. NAV per token rises by about (premium − 1) × issued share ÷ (1 + issued share) on the vault half.',
+      related:['scanner','return','dryer']},
+    scanner:{name:'Scanner',role:'TwapOracle · the gauge every swap is gated on',chips:['TwapOracle.sol'],
+      summary:'A seven-day time-weighted average price built from keeper observations. Every controller swap must sit within 3% of it, and the sell tax is judged against it.',
+      fns:[
+        {sig:'update()',caller:'keeper',effect:'Records the spot price once per hour at most. Anyone may record once the last observation is six hours stale, so the oracle cannot be starved.',guards:['first observation is updater-only: it anchors the whole TWAP','MIN_GAP 1 h · TooSoon; STALE_AFTER 6 h · NotUpdater','a stale-mode observation is clamped to ±5% of the last recorded price · PERMISSIONLESS_STEP_BPS, so a flash-moved pool can nudge the TWAP, never jump it']},
+        {sig:'consult() → price',caller:'view',effect:'The trailing time-weighted average, by binary search over observations.',guards:['falls back to spot() before the first observation']},
+        {sig:'spot() · spotAfterSell(uint256 tokensIn)',caller:'view',effect:'Spot from cached reserves, and the constant-product price the pair will actually settle at after a sale, including the USDC the sale takes out and the 0.3% fee.',guards:[]},
+        {sig:'_sellPriceOk · _buyPriceOk (controller)',caller:'auto',effect:'spot ≥ TWAP × (1 − 3%) for sales; spot ≤ TWAP × (1 + 3%) for buybacks. Ceiling 10%, floor 0.5%.',guards:[]},
+        {sig:'setUpdater(address)',caller:'owner',effect:'',guards:[]},
+      ],
+      reads:['observations(i) · count() · window · updater'],inside:[],
+      spec:'DESIGN s6. Replace with a cumulative-price oracle before large size; the token\'s oracle is owner-settable behind the timelock for exactly that reason.',
+      related:['press','dryer','headbox']},
+    dryer:{name:'Dryer section',role:'Mill tax hook · tax processing',chips:['Mill.sol','TreasuryController.sol'],
+      summary:'Every trade against a registered pool gives up a little MILL. On a real pair the reserves are cached, so a seller could once split a sale into many transfers that each saw unchanged reserves. Now each transfer pays the increment of the cumulative tax on everything sold since the pair last synced: splitting buys nothing.',
+      fns:[
+        {sig:'Mill._update(from, to, value)',caller:'auto',effect:'Buy: 1% of value. Sell: the cumulative tax on pendingSellGross + value minus the tax already paid on pendingSellGross. The tax goes to the controller as MILL.',guards:['pendingSellGross resets once the pair\'s cached reserve has caught up with its balance','mints, burns, exempt parties and zero values pass through','ControllerUnset if no controller is wired']},
+        {sig:'sellTaxBpsFor(uint256 tokensIn) → bps',caller:'view',effect:'2% rising linearly to 5% as the post-sale spot falls up to 10% under the TWAP.',guards:['ceiling 5% on every rate · MAX_TAX_BPS']},
+        {sig:'_processTax (inside runEpoch, second)',caller:'auto',effect:'Above NAV the collected tax is sold for USDC that becomes vault shares; below NAV it is burned.',guards:['sale gated on spot ≥ TWAP × 0.97 · TaxDeferred','per-epoch pool budget shared across retries · taxSoldThisEpoch','dust that would quote to zero output is left for later, never sent to a swap a real pair would revert']},
+        {sig:'lowerTaxSchedule(TaxSchedule)',caller:'owner',effect:'Rates can only fall; the trigger can only rise.',guards:['TaxRaised · TaxTooHigh']},
+      ],
+      reads:['taxSchedule() · currentSellTaxBps() · taxedPools · taxExempt · pendingSellGross(pool)'],inside:[],
+      spec:'DESIGN s6. The sell tax leans against selling into weakness; the spec\'s own warning is that it also widens a discount.',
+      related:['chimney','return','scanner']},
+    reel:{name:'Reel',role:'MILL in the market · VeLocker',chips:['VeLocker.sol','Mill.sol'],
+      summary:'Finished MILL trades in the pool or winds onto the reel: lock it for one to fifty-two weeks and hold a weight from 1× to 4× that any future distribution is shared by.',
+      fns:[
+        {sig:'VeLocker.lock(uint256 amount, uint64 weeks)',caller:'anyone',effect:'One lock per address; adding re-weights the whole position at the new duration. weight = amount × (1 + 3 × (weeks − 1) ÷ 51).',guards:['1 ≤ weeks ≤ 52 · BadDuration; a new end may not be earlier than the current one']},
+        {sig:'VeLocker.unlock()',caller:'anyone',effect:'After the end: settles rewards, returns the MILL.',guards:['StillLocked · NoLock']},
+        {sig:'VeLocker.kick(address user)',caller:'anyone',effect:'Re-weights an expired lock to 1×, so a lapsed commitment stops earning a long-lock boost against capital still committed.',guards:['StillLocked while the lock runs']},
+        {sig:'VeLocker.claim() → amount',caller:'anyone',effect:'Pays pending USDC pro-rata to weight.',guards:[]},
+        {sig:'VeLocker.distribute(uint256 amount)',caller:'owner',effect:'Off in v1. The distributor is set by governance.',guards:['NotDistributor · NoWeight']},
+      ],
+      reads:['lockOf · weightOf · pendingOf · boostBps(weeks) · totalWeight · lockedSupply'],inside:[],
+      spec:'DESIGN s6. The aim is to make the marginal seller a locker. The spec\'s caveat: locks expire into weakness.',
+      related:['dryer','press']},
+    drive:{name:'Drive',role:'TreasuryController.runEpoch · the print run',chips:['TreasuryController.sol'],
+      summary:'Anyone can turn the wheel once the epoch is due. A deferred run can be retried after an hour without consuming a new epoch. Nothing inside reverts: gated swaps defer, rejected deposits buffer, stale carries are dropped.',
+      fns:[
+        {sig:'runEpoch()',caller:'anyone',effect:'A fresh epoch increments the counter and resets the per-epoch budgets (carried buyback, tax sold, issued). Then, in this order: allocate yield, process tax, issue, flush buffered deposits.',guards:['epochDue: now ≥ lastEpochAt + epochSeconds (7 to 90 days)','retryDue: hasDeferred and now ≥ lastRunAt + 1 h · RETRY_GAP','EpochNotDue otherwise']},
+        {sig:'migrate(address newController)',caller:'owner',effect:'Moves the backing (PULP shares, MILL, USDC) to a successor, so a bug or a mis-set limit can never strand it.',guards:['ZeroAddress']},
+      ],
+      reads:['epochDue() · retryDue() · currentEpoch · hasDeferred · deferredBuybackUsdc · taxSoldThisEpoch · issuedThisEpoch · pendingVaultDeposit'],inside:[],
+      spec:'DESIGN s9. The keeper\'s delivery and report precede the run; processPayouts follows it.',
+      related:['headbox','dryer','press','return']},
+    chimney:{name:'Chimney',role:'burn · supply down, NAV per token up',chips:['Mill.sol'],
+      summary:'The only place supply shrinks.',
+      fns:[
+        {sig:'Mill.burn(uint256 amount)',caller:'anyone',effect:'Burns the caller\'s own MILL.',guards:[]},
+        {sig:'controller burn paths',caller:'auto',effect:'Buyback below NAV (BoughtBack); tax below NAV (TaxProcessed, sold = false); the unused POL token side after addLiquidity.',guards:[]},
+      ],
+      reads:['Mill.totalSupply() · navPerToken()'],inside:[],spec:'',related:['headbox','dryer']},
+    return:{name:'Return header',role:'USDC back to stock · the flywheel closes here',chips:['TreasuryController.sol','Pulp.sol'],
+      summary:'Controller value that belongs to MILL, tax sale proceeds and the vault half of issuance, becomes controller-owned PULP. More shares against the same or smaller MILL supply raises NAV per token, which raises the floor under the premium that runs the press again.',
+      fns:[
+        {sig:'_depositToVault(uint256) · _flushVaultDeposit()',caller:'auto',effect:'Buffers USDC in pendingVaultDeposit and deposits it as controller PULP when it clears the vault minimum and the vault accepts; retried at every run.',guards:[]},
+        {sig:'Pulp.deposit(total, controller)',caller:'controller',effect:'The same deposit path any holder uses, with the same guards.',guards:[]},
+        {sig:'Pulp.redeemForController(amount)',caller:'controller',effect:'The counter-flow: controller PULP burned at NAV to fund a buyback.',guards:[]},
+        {sig:'Pulp.recogniseInflow(uint256 amount)',caller:'owner',effect:'Governance acknowledges cash that arrived by plain transfer (builder fees) as a contribution rather than returned principal.',guards:[]},
+      ],
+      reads:['vaultShareBps() · navPerToken() · Pulp.nav() · pendingVaultDeposit'],inside:[],spec:'DESIGN s1 and s5.',related:['chest','press','dryer']},
+    office:{name:'Mill office',role:'governance · owner-only · 48h timelock (spec)',chips:['Pulp.sol','TreasuryController.sol','Mill.sol','VeLocker.sol','TwapOracle.sol'],
+      summary:'Every owner lever, each with a floor, a ceiling, or a direction. Nothing here can loosen a limit past what the code allows, and nothing here can pause the engine irreversibly.',
+      fns:[
+        {sig:'Pulp: setRoles · setTeam · registerAccount · setAccountCap · deactivateAccount',caller:'owner',effect:'',guards:['setTeam: fee lower-only, wallet non-zero']},
+        {sig:'Pulp: setCapRate · setWarmup · setYieldCap · setPaperCap · donate · recogniseInflow',caller:'owner',effect:'',guards:['capRate floor 0.5 · warm-up 7 to 30 d · yield cap lower-only, floor 1% · PAPER cap 0.1× to 3×']},
+        {sig:'TreasuryController: lowerLimits · setAllocation · setPolLpHolder · migrate',caller:'owner',effect:'',guards:['every limit has a floor and a ceiling: epoch 7 to 90 d, caps ≥ 0.1%, band ≥ 0.5%, POL share 20% to 80%']},
+        {sig:'Mill: setController · setOracle · setTaxedPool · setTaxExempt · lowerTaxSchedule',caller:'owner',effect:'',guards:['oracle is replaceable behind the timelock · rates lower-only, trigger raise-only']},
+        {sig:'VeLocker.setDistributor · TwapOracle.setUpdater',caller:'owner',effect:'',guards:[]},
+        {sig:'transferOwnership · acceptOwnership (Ownable2Step, all five)',caller:'owner',effect:'',guards:['deploy script: batch the five acceptOwnership calls in one timelock proposal; the deployer key is owner until it executes']},
+      ],
+      reads:[],inside:[],spec:'DESIGN s2. The Safe and the timelock are the deployment plan, not code in these five contracts.',related:['chest','beater','drive']},
+  };
+  var ORDER=['chest','beater','headbox','press','scanner','dryer','reel','drive','chimney','return','office'];
+  var LABEL={anyone:'anyone',keeper:'keeper',controller:'controller',owner:'owner · timelock',auto:'automatic',view:'view'};
+
+  // ---------- panel render
+  var panel=document.getElementById('panel'),dock=document.getElementById('dock'),scrim=document.getElementById('scrim'),active=null;
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+  function sigHtml(s){return esc(s).replace(/\(([^)]*)\)/g,function(m,a){return '('+a.replace(/(uint\d*|address|bool|int\d*|bytes\d*|string)\b/g,'<span class="ty">$1</span>')+')';});}
+  function fnHtml(f){var g=f.guards&&f.guards.length?'<ul class="guards">'+f.guards.map(function(x){return '<li>'+esc(x).replace(/·\s([A-Za-z_][A-Za-z0-9_]*(\s?[·,]\s?[A-Za-z_][A-Za-z0-9_]*)*)$/,'· <code>$1</code>')+'</li>';}).join('')+'</ul>':'';
+    return '<div class="fn"><div class="sig">'+sigHtml(f.sig)+'</div><span class="badge '+f.caller+'">'+LABEL[f.caller]+'</span>'+(f.effect?'<div class="effect">'+esc(f.effect)+'</div>':'')+g+'</div>';}
+  function render(id){var s=S[id];if(!s)return;active=id;
+    var h='<header><div class="t"><h3>'+esc(s.name)+'</h3><div class="role">'+esc(s.role)+'</div></div><button class="close" aria-label="Close">×</button></header><div class="body">';
+    h+='<div class="chiprow">'+s.chips.map(function(c){return '<span class="chip contract">'+esc(c)+'</span>';}).join('')+'</div>';
+    h+='<p class="summary">'+esc(s.summary)+'</p>';
+    h+=s.fns.map(fnHtml).join('');
+    if(s.reads&&s.reads.length)h+='<details open><summary>Reads</summary><ul class="guards">'+s.reads.map(function(r){return '<li>'+esc(r)+'</li>';}).join('')+'</ul></details>';
+    if(s.inside&&s.inside.length)h+='<details><summary>Inside the machine</summary><ul class="guards">'+s.inside.map(function(r){return '<li>'+esc(r)+'</li>';}).join('')+'</ul></details>';
+    if(s.spec)h+='<div class="spec">'+esc(s.spec)+'</div>';
+    if(s.related&&s.related.length)h+='<div class="related">'+s.related.map(function(r){return '<button type="button" data-go="'+r+'">'+esc(S[r].name)+'</button>';}).join('')+'</div>';
+    h+='</div>';panel.innerHTML=h;
+    document.querySelectorAll('.mill .st').forEach(function(g){g.classList.toggle('is-active',g.getAttribute('data-station')===id);});
+    document.querySelectorAll('#chips button').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-go')===id));});
+    dock.classList.add('open');scrim.classList.add('show');
+    if(location.hash!=='#'+id){try{history.replaceState(null,'','#'+id);}catch(e){}}
+  }
+  function closePanel(){dock.classList.remove('open');scrim.classList.remove('show');}
+  panel.addEventListener('click',function(e){var c=e.target.closest('.close');if(c){closePanel();return;}var g=e.target.closest('[data-go]');if(g){render(g.getAttribute('data-go'));}});
+  scrim.addEventListener('click',closePanel);
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closePanel();
+    if((e.key==='ArrowRight'||e.key==='ArrowLeft')&&active&&document.activeElement&&document.activeElement.closest('.mill')){var i=ORDER.indexOf(active);var n=ORDER[(i+(e.key==='ArrowRight'?1:ORDER.length-1))%ORDER.length];render(n);var el=document.querySelector('.mill .st[data-station="'+n+'"]');if(el)el.focus();e.preventDefault();}});
+  document.querySelectorAll('.mill .st').forEach(function(g){var id=g.getAttribute('data-station');
+    g.addEventListener('click',function(){render(id);if(id==='drive')runSequence();});
+    g.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();render(id);if(id==='drive')runSequence();}});});
+  var chips=document.getElementById('chips');chips.innerHTML=ORDER.map(function(id){return '<button type="button" role="tab" data-go="'+id+'" aria-pressed="false">'+esc(S[id].name)+'</button>';}).join('');
+  chips.addEventListener('click',function(e){var b=e.target.closest('[data-go]');if(b)render(b.getAttribute('data-go'));});
+  // list view (no-JS-friendly content, also indexable)
+  document.getElementById('listview-body').innerHTML=ORDER.map(function(id){var s=S[id];return '<details><summary>'+esc(s.name)+' <span class="mono" style="color:var(--ink-3);font-weight:400;font-size:11px">'+esc(s.role)+'</span></summary><p class="summary" style="color:var(--ink-2)">'+esc(s.summary)+'</p>'+s.fns.map(fnHtml).join('')+'</details>';}).join('');
+  if(location.hash&&S[location.hash.slice(1)])render(location.hash.slice(1));
+  window.addEventListener('hashchange',function(){var id=location.hash.slice(1);if(S[id])render(id);});
+
+  // ---------- regime + print run
+  var regime='below',outOfBand=false,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll('[data-regime]').forEach(function(b){b.addEventListener('click',function(){regime=b.getAttribute('data-regime');document.querySelectorAll('[data-regime]').forEach(function(x){x.setAttribute('aria-pressed',String(x===b));});setNeedle();});});
+  document.getElementById('outofband').addEventListener('change',function(e){outOfBand=e.target.checked;document.getElementById('scanhead').setAttribute('fill',outOfBand?'var(--warn)':'var(--ink-3)');});
+  function setNeedle(){var n=document.getElementById('needle');var a={below:-135,above:-90,premium:-45}[regime];var r=a*Math.PI/180;n.setAttribute('x2',574+22*Math.cos(r));n.setAttribute('y2',290+22*Math.sin(r));}
+  setNeedle();
+  var cap=document.getElementById('caption');
+  function say(step,text){cap.innerHTML='<span class="step">'+esc(step)+'</span><span>'+text+'</span>';}
+  function dimAll(except){document.querySelectorAll('.mill .st').forEach(function(g){var id=g.getAttribute('data-station');g.classList.toggle('is-dim',except.length>0&&except.indexOf(id)<0);});}
+  function tag(x,y,text){var t=document.getElementById('tags');var w=text.length*6+12;t.innerHTML+='<g><rect class="tagbox" x="'+(x-w/2)+'" y="'+(y-10)+'" width="'+w+'" height="16" rx="3"/><text class="tag" x="'+(x-w/2+6)+'" y="'+(y+2)+'">'+esc(text)+'</text></g>';}
+  function clearTags(){document.getElementById('tags').innerHTML='';}
+  function pulse(pathId,cls,dur,reverse){if(reduce)return;var p=document.getElementById(pathId);if(!p)return;var d=p.getAttribute('d');var c=document.createElementNS('http://www.w3.org/2000/svg','circle');c.setAttribute('r','4');c.setAttribute('class','pulse');c.style.fill='var(--'+cls+')';c.style.offsetPath='path("'+d+'")';c.style.offsetRotate='0deg';document.getElementById('pulses').appendChild(c);
+    var a=c.animate([{offsetDistance:reverse?'100%':'0%'},{offsetDistance:reverse?'0%':'100%'}],{duration:dur,easing:'ease-in-out'});a.onfinish=function(){c.remove();};}
+  function motes(){if(reduce)return;document.querySelectorAll('#motes circle').forEach(function(m,i){m.animate([{opacity:.9,transform:'translateY(0)'},{opacity:0,transform:'translateY(-60px)'}],{duration:1800,delay:i*250});});}
+  var running=false;
+  function runSequence(){if(running)return;running=true;clearTags();var ring=document.getElementById('ring');var steps=[];
+    steps.push([0,function(){dimAll(['drive']);say('runEpoch','epoch due · <b>twap = oracle.consult()</b> · <b>navQ = navPerToken()</b> · per-epoch budgets reset');if(!reduce)ring.animate([{strokeDashoffset:226},{strokeDashoffset:0}],{duration:9000,fill:'forwards'});}]);
+    steps.push([2000,function(){dimAll(['headbox','chest','chimney']);if(regime==='below'){if(outOfBand){say('_allocateYield','spot above the band → <b>carried as deferredBuybackUsdc</b> · hasDeferred · retry in 1h');tag(470,340,'deferred · carried');}else{say('_allocateYield','below NAV → <b>redeemForController</b> → swap → <b>burn</b> · BoughtBack');pulse('p-buyback','stock-deep',1400);setTimeout(motes,1300);}}else{say('_allocateYield','premium ≥ 1.0× → <b>0% buyback</b> · the budget stays in the vault and compounds');}}]);
+    steps.push([4200,function(){dimAll(['dryer','chimney','return','chest']);if(regime==='below'){say('_processTax','below NAV → tax <b>burned</b> · TaxProcessed(sold = false)');motes();}else if(outOfBand){say('_processTax','spot below the band → <b>TaxDeferred</b> · kept for the next run');tag(1010,120,'TaxDeferred');}else{say('_processTax','above NAV → tax <b>sold</b> inside the per-epoch pool budget → <b>vault shares</b>');pulse('p-cond','cash',900);setTimeout(function(){pulse('p-tap2','cash',400);},900);setTimeout(function(){pulse('p-return','cash',2200,false);},1300);}}]);
+    steps.push([6600,function(){dimAll(['press','return','chest','scanner']);if(regime==='premium'){if(outOfBand){say('_maybeIssue','spot below the band → <b>IssuanceSkipped</b> · retry in 1h, same epoch, no new tranche');tag(790,130,'IssuanceSkipped');}else{say('_maybeIssue','≥ 1.5× → <b>mint</b> one tranche (cap per epoch) · <b>sell</b> · half → vault, half → POL (LP → 30-day lock) · Issued');pulse('p-sale','sheet-edge',700);setTimeout(function(){pulse('p-tap1','cash',400);},800);setTimeout(function(){pulse('p-return','cash',2200,false);},1200);var lp=document.getElementById('lpbadge');if(!reduce)lp.animate([{opacity:1},{opacity:.2},{opacity:1}],{duration:900});}}else{say('_maybeIssue','twap ÷ navPerToken below 1.5× → <b>no issuance</b>');}}]);
+    steps.push([9000,function(){dimAll(['return','chest']);say('_flushVaultDeposit','buffered USDC → <b>Pulp.deposit(total, controller)</b> · more shares behind the same MILL · NAV per token up');var e=document.getElementById('tape-epoch');var n=parseInt((e.textContent.match(/\d+/)||['0'])[0],10)+1;e.textContent='#'+n+' (demo)';}]);
+    steps.push([11000,function(){dimAll([]);say('idle','Order inside <b>runEpoch</b>: allocate, then tax, then issue. The issuance tranche moves spot the most, so it runs last.');clearTags();running=false;}]);
+    steps.forEach(function(s){setTimeout(s[1],reduce?s[0]/4:s[0]);});
+  }
+  document.getElementById('runbtn').addEventListener('click',runSequence);
+
+  // ---------- the tour: one plain sentence per station, in line order
+  var TOUR=[
+    ['chest','You deposit USDC here and get PULP at net asset value. PULP is the floor: you can always redeem it at NAV, through a queue.'],
+    ['beater','The keeper farms PAPER on Papertrade with that cash, inside per-account caps, and delivers the USDC it earns back here. The team fee comes off at the door; the rest vests into NAV over a week.'],
+    ['headbox','Where stock becomes sheet. The controller takes its share of the week\'s yield and one rule decides: below NAV it buys MILL back and burns it, at or above NAV it leaves the money in the vault to compound.'],
+    ['press','When MILL trades at 1.5× its backing, the press runs: one tranche of new MILL is sold, half the proceeds go into the vault behind every token, half into protocol-owned liquidity.'],
+    ['scanner','The scanner is the price gauge: a 7-day average. Every swap the mill makes has to sit within 3% of it, so a one-block price flash cannot make the mill buy high or sell low.'],
+    ['dryer','Every MILL trade gives up a little: 1% on buys, 2% to 5% on sells judged on the price after the sale. Above NAV that tax is sold into vault shares; below NAV it is burned.'],
+    ['reel','Finished MILL winds onto the reel. Lock it for one to fifty-two weeks and hold a weight from 1× to 4×, which any future distribution is shared by.'],
+    ['drive','The drive is the weekly print run. Anyone can turn it once the epoch is due; nothing inside reverts, a gated swap just waits an hour and tries again.'],
+    ['chimney','The chimney is the only place supply shrinks: buybacks below NAV, tax below NAV, and leftover liquidity tokens all burn here.'],
+    ['return','The return header closes the loop. Proceeds come back as vault shares behind the same MILL, NAV per token rises, and a higher floor is what the next premium is measured against.'],
+    ['office','The mill office holds every governance lever. Each one has a floor, a ceiling, or a one-way direction in code, so nothing here can loosen a limit past what the code allows.'],
+  ];
+  var tourAt=-1, tourBox=document.getElementById('tour');
+  function tourShow(i){tourAt=i;var s=TOUR[i];document.getElementById('tour-n').textContent=(i+1)+' / '+TOUR.length+' · '+S[s[0]].name;document.getElementById('tour-say').textContent=s[1];render(s[0]);dimAll([s[0]]);
+    document.getElementById('tour-prev').disabled=i===0;document.getElementById('tour-next').textContent=i===TOUR.length-1?'Finish':'Next';
+    var el=document.querySelector('.mill .st[data-station="'+s[0]+'"]');if(el&&el.scrollIntoView)el.scrollIntoView({block:'nearest',inline:'center',behavior:reduce?'auto':'smooth'});}
+  function tourStart(){if(running)return;tourBox.hidden=false;document.getElementById('plate').scrollIntoView({block:'start',behavior:reduce?'auto':'smooth'});tourShow(0);}
+  function tourEnd(){tourBox.hidden=true;tourAt=-1;dimAll([]);say('idle','Select a part of the mill, take the tour, or run the print run. Order inside <b>runEpoch</b>: allocate, then tax, then issue.');}
+  document.getElementById('tourbtn').addEventListener('click',tourStart);
+  document.getElementById('tour-next').addEventListener('click',function(){if(tourAt>=TOUR.length-1)tourEnd();else tourShow(tourAt+1);});
+  document.getElementById('tour-prev').addEventListener('click',function(){if(tourAt>0)tourShow(tourAt-1);});
+  document.getElementById('tour-exit').addEventListener('click',tourEnd);
+  document.addEventListener('keydown',function(e){if(tourAt<0)return;if(e.key==='ArrowRight'){e.preventDefault();if(tourAt>=TOUR.length-1)tourEnd();else tourShow(tourAt+1);}else if(e.key==='ArrowLeft'){e.preventDefault();if(tourAt>0)tourShow(tourAt-1);}else if(e.key==='Escape'){tourEnd();}},true);
+  // idle animation only while the hero is in view
+  var plate=document.getElementById('plate');
+  if('IntersectionObserver' in window){new IntersectionObserver(function(es){es.forEach(function(e){plate.classList.toggle('in-view',e.isIntersecting);});},{threshold:.15}).observe(plate);}else{plate.classList.add('in-view');}
+})();
+</script>
+
+</body>
+</html>

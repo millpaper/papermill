@@ -1,0 +1,7 @@
+{
+  "network": "HyperEVM mainnet",
+  "chainId": 999,
+  "rpc": "https://rpc.hyperliquid.xyz/evm",
+  "usdc": "0xb88339CB7199b77E23DB6E890353E22632Ba630f",
+  "status": "not deployed yet"
+}
