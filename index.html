@@ -336,6 +336,17 @@ footer{border-top:2px solid var(--ink)}
 .tour-nav{display:flex;gap:8px}
 .tour .btn{color:var(--plate-ink);border-color:var(--plate-ink-3)}
 .tour .btn.primary{background:var(--plate-accent);border-color:var(--plate-accent);color:var(--plate)}
+
+.topbuy{display:inline-block}.topdep{display:none}@media (min-width:600px){.topdep{display:inline-block}}
+.buy{margin:22px 0 10px;display:grid;gap:12px;max-width:560px}
+.buy-main{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-family:var(--font-display);font-size:26px;font-weight:700;letter-spacing:-.01em;padding:18px 22px;border-radius:var(--radius);border:2px solid var(--accent);box-shadow:0 6px 0 color-mix(in srgb,var(--ink) 35%,transparent)}
+.buy-main:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.buy-main span{font-size:30px}
+.buy-row{display:flex;flex-wrap:wrap;gap:10px}
+.ca{display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:12px;color:var(--ink-2)}
+.ca code{font-family:var(--font-mono);font-size:12px;background:var(--raised);border:1px solid var(--rule);padding:4px 8px;border-radius:6px;word-break:break-all;min-width:0}
+.ca .copy{padding:4px 10px;font-size:11px}
+@media (max-width:600px){.buy-main{font-size:21px;padding:16px 18px}}
 </style>
 </head>
 <body>
@@ -350,6 +361,8 @@ footer{border-top:2px solid var(--ink)}
       <a href="#mill">The mill</a><a href="#run">Print run</a><a href="#layers">Two layers</a><a href="#limits">Limits</a>
     </nav>
     <div class="spacer"></div>
+    <a class="btn primary topbuy" href="https://app.hyperswap.exchange/#/swap?outputCurrency=0x0e0d6075679657Cc0B08679f582f6615343c85Bd" target="_blank" rel="noopener">Buy MILL</a>
+    <a class="btn topdep" href="vault.html">Deposit</a>
     <div class="theme" role="group" aria-label="Theme">
       <button type="button" data-theme-set="light" aria-pressed="true">paper</button>
       <button type="button" data-theme-set="dark" aria-pressed="false">night</button>
@@ -376,6 +389,14 @@ footer{border-top:2px solid var(--ink)}
         <li>MILL trades at a premium and pays for the next run</li>
         <li>one print run a week, nothing reverts</li>
       </ul>
+      <div class="buy" aria-label="Buy">
+        <a class="buy-main" href="https://app.hyperswap.exchange/#/swap?outputCurrency=0x0e0d6075679657Cc0B08679f582f6615343c85Bd" target="_blank" rel="noopener">Buy MILL on HyperSwap <span aria-hidden="true">&rarr;</span></a>
+        <div class="buy-row">
+          <a class="btn" href="vault.html">Deposit USDC, get PULP</a>
+          <a class="btn" href="https://dexscreener.com/hyperevm/0x3db3ac035203270bf0c95f3c7c22a3672219264d" target="_blank" rel="noopener">Chart</a>
+        </div>
+        <div class="ca"><span class="mono">CA</span> <code id="ca">0x0e0d6075679657Cc0B08679f582f6615343c85Bd</code> <button type="button" class="btn copy" id="copyca">copy</button></div>
+      </div>
       <div class="ctas">
         <a class="bracket" href="#mill">the mill</a>
         <a class="bracket" href="#run">print run</a>
@@ -384,7 +405,7 @@ footer{border-top:2px solid var(--ink)}
       <p class="thesis">The whole flywheel is a paper mill. Every part is a function. Click one.</p>
     </div>
     <aside class="hero-aside" aria-label="What this page is">
-      <div class="mono">DESIGN v0.2.1 · illustration, not live data · not deployed</div>
+      <div class="mono">LIVE ON HYPEREVM · chain 999 · pool USDC/MILL on HyperSwap v2</div>
       <dl>
         <dt>Stock</dt><dd>USDC you deposit. You get PULP, a vault share you can always redeem at net asset value through a queue. The floor.</dd>
         <dt>Sheet</dt><dd>MILL, the token the mill makes. Backed by PULP the controller holds, never redeemable, so it can trade at a premium. The fuel.</dd>
@@ -1021,6 +1042,10 @@ footer{border-top:2px solid var(--ink)}
   var plate=document.getElementById('plate');
   if('IntersectionObserver' in window){new IntersectionObserver(function(es){es.forEach(function(e){plate.classList.toggle('in-view',e.isIntersecting);});},{threshold:.15}).observe(plate);}else{plate.classList.add('in-view');}
 })();
+</script>
+<script>
+(function(){var b=document.getElementById('copyca');if(!b)return;b.addEventListener('click',function(){var t=document.getElementById('ca').textContent;function done(){b.textContent='copied';setTimeout(function(){b.textContent='copy'},1500)}
+try{navigator.clipboard.writeText(t).then(done,function(){var r=document.createRange();r.selectNodeContents(document.getElementById('ca'));var s=getSelection();s.removeAllRanges();s.addRange(r);done()})}catch(e){done()}})})();
 </script>
 
 </body>
