@@ -370,6 +370,9 @@ footer{border-top:2px solid var(--ink)}
 .how li{margin:6px 0}
 .ca{margin:0 0 6px}
 @media (max-width:860px){.actions{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.act-buy .act-t{font-size:34px}}
+
+.stickybuy{display:none;position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:60;background:#16a34a;color:#fff;border:3px solid #15803d;box-shadow:0 6px 0 #14532d;border-radius:14px;text-align:center;text-decoration:none;font-family:var(--font-display);font-weight:700;font-size:28px;padding:16px 20px}
+@media (max-width:860px){.stickybuy{display:block}body{padding-bottom:90px}}
 </style>
 </head>
 <body>
@@ -400,6 +403,7 @@ footer{border-top:2px solid var(--ink)}
   </div>
 </div>
 
+<a class="stickybuy" href="https://app.hyperswap.exchange/#/swap?outputCurrency=0x0e0d6075679657Cc0B08679f582f6615343c85Bd" target="_blank" rel="noopener">BUY MILL &rarr;</a>
 <main id="top">
 <section class="hero">
   <div class="dither" id="dither" aria-hidden="true"></div>
@@ -1073,9 +1077,10 @@ try{navigator.clipboard.writeText(t).then(done,function(){var r=document.createR
 (async function(){
   var $=function(i){return document.getElementById(i)};
   var fmt=function(n,d){return Number(n).toLocaleString('en-US',{maximumFractionDigits:d===undefined?0:d})};
+  var p=null;
   try{
     var r=await (await fetch('https://api.dexscreener.com/latest/dex/pairs/hyperevm/0x3db3ac035203270bf0c95f3c7c22a3672219264d')).json();
-    var p=r.pairs&&r.pairs[0]; if(p){
+    p=r.pairs&&r.pairs[0]; if(p){
       $('s-price').textContent='$'+Number(p.priceUsd).toPrecision(3);
       $('s-liq').textContent='$'+fmt(p.liquidity.usd);
       $('s-tx').textContent=p.txns.h24.buys+' / '+p.txns.h24.sells;
@@ -1085,10 +1090,10 @@ try{navigator.clipboard.writeText(t).then(done,function(){var r=document.createR
     var rpc='https://rpc.hyperliquid.xyz/evm';
     var call=async function(to,data){var q=await (await fetch(rpc,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'eth_call',params:[{to:to,data:data},'latest']})})).json();return BigInt(q.result)};
     var nav=await call('0xcA72A559005cd541fd0af76d0a564fC20E6FE2EC','0xc1590cd7');
-    var npt=await call('0xA2F519C4ec7b86057C0E9A991CEF4ba73E98Ac06','0xa036f25b');
-    var spot=await call('0x677db82f5d9B71A2E0256C4233892ACC0109aE55','0x6f265b93');
+    var sup=await call('0x0e0d6075679657Cc0B08679f582f6615343c85Bd','0x18160ddd');
     $('s-nav').textContent='$'+fmt(Number(nav)/1e6);
-    $('s-prem').textContent= npt>0n ? (Number(spot)/Number(npt)).toFixed(1)+'x' : '—';
+    var navPer=(Number(nav)/1e6)/(Number(sup)/1e18);
+    if(p&&navPer>0){ $('s-prem').textContent=(Number(p.priceUsd)/navPer).toFixed(1)+'x'; } else { $('s-prem').textContent='—'; }
   }catch(e){}
 })();
 </script>
