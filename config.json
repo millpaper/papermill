@@ -1,7 +1,13 @@
 {
-  "network": "HyperEVM mainnet",
-  "chainId": 999,
-  "rpc": "https://rpc.hyperliquid.xyz/evm",
-  "usdc": "0xb88339CB7199b77E23DB6E890353E22632Ba630f",
-  "status": "not deployed yet"
+    "network":  "HyperEVM mainnet",
+    "chainId":  999,
+    "rpc":  "https://rpc.hyperliquid.xyz/evm",
+    "usdc":  "0xb88339CB7199b77E23DB6E890353E22632Ba630f",
+    "mill":  "0x0e0d6075679657cc0b08679f582f6615343c85bd",
+    "oracle":  "0x677db82f5d9b71a2e0256c4233892acc0109ae55",
+    "pulp":  "0xca72a559005cd541fd0af76d0a564fc20e6fe2ec",
+    "controller":  "0xa2f519c4ec7b86057c0e9a991cef4ba73e98ac06",
+    "locker":  "0xe9d76a869b4fafa83c9997508c548b7a5eeabcfe",
+    "pair":  "0x3dB3aC035203270bF0C95f3c7c22a3672219264d",
+    "router":  "0xb4a9C4e6Ea8E2191d2FA5B380452a634Fb21240A"
 }
